@@ -92,3 +92,15 @@ After the fixes above:
 - Resubmit failed formal flow jobs with the TorchInductor cache fix.
 - Prefer H200, then H100, then A100/L40S if queue availability requires fallback.
 - Use distinct Slurm output names, W&B group/name, and run IDs for any duplicate or backup diagnostics to avoid mixing results.
+
+## Repair Submissions
+
+Submitted on 2026-06-04 after commit `c310a49`:
+
+| Job | Purpose | Partition/GPU | Array | Notes |
+| --- | --- | --- | --- | --- |
+| `9428343` | Formal 2x2 replacement/continuation | `gpu-h200`, 8x H200 | `0-3` | Uses fixed TorchInductor cache setup and resumes from existing model checkpoints when present. |
+| `9428344` | Single-GPU full-like repair | `gpu-h200`, 1x H200 | `0-2` | Uses `DIAG_MODE=full`, `DIAG_STEPS=500000`, and same W&B run IDs to verify offset-aware resume for failed continuations. |
+| `9428345` | Single-GPU reduced-memory repair | `gpu-h200`, 1x H200 | `0-3` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=500000` for lower-memory coverage. |
+
+Stale pending job `9417062_3` was canceled before these submissions because it was submitted with the older Slurm script snapshot.
