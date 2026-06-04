@@ -132,3 +132,13 @@ Fixes applied:
 - Cleared HOME cache directories `.cache/stable-pretraining` and `.cache/wandb`, reducing HOME usage from the 20 GB quota to about 11.2 GB.
 
 The old pending formal job `9428343` should be canceled and resubmitted with the fixed Slurm script snapshot.
+
+Repair submissions after runtime-cache fix:
+
+| Job | Purpose | Partition/GPU | Array | Notes |
+| --- | --- | --- | --- | --- |
+| `9430627` | Formal 2x2 replacement/continuation | `gpu-h200`, 8x H200 | `0-3` | Submitted after canceling stale pending job `9428343`; uses project-local runtime cache paths and no W&B artifact staging. |
+| `9430628` | Single-GPU full repair | `gpu-h200`, 1x H200 | `0-2` | Uses `DIAG_MODE=full`, `DIAG_STEPS=500000`, project-local cache paths, and no W&B artifact staging. |
+| `9430629` | Single-GPU reduced debug | `gpu-h200`, 1x H200 | `0` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=20000`, and `CUDA_LAUNCH_BLOCKING=1` to locate the reduced-mode scatter/index failure. |
+
+Failed repair weights created by `9428344` and `9428345` were removed again, leaving only `single-full_wm-flow_pi-flow_seed-1/models` and `wm-mlp_pi-gaussian_seed-1/models`.
