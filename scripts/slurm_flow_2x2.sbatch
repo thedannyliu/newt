@@ -5,10 +5,10 @@
 #SBATCH --array=0-3
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:1
-#SBATCH --mem=128G
-#SBATCH --time=24:00:00
+#SBATCH --mem=256G
+#SBATCH --time=72:00:00
 #SBATCH --qos=embers
 
 set -euo pipefail
@@ -50,5 +50,7 @@ NAME="wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
   policy_arch="${POLICY}" \
   wandb_group="${WANDB_GROUP}" \
   wandb_name="${NAME}" \
+  wandb_run_id="${NAME}" \
+  wandb_resume=allow \
   exp_name="${NAME}" \
   data_dir="${DATA_DIR}"

@@ -99,6 +99,8 @@ class Config:
 	wandb_entity: Optional[str] = None						# wandb entity; defaults to WANDB_ENTITY
 	wandb_group: Optional[str] = None						# optional explicit wandb group
 	wandb_name: Optional[str] = None						# optional explicit wandb run name
+	wandb_run_id: Optional[str] = None						# stable wandb run id for resume
+	wandb_resume: str = "allow"								# wandb resume policy
 	enable_wandb: bool = True								# whether to enable wandb logging
 
 	# misc

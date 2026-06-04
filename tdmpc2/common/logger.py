@@ -140,6 +140,8 @@ class Logger:
 				project=self.project,
 				entity=self.entity,
 				name=getattr(cfg, "wandb_name", None) or str(cfg.seed),
+				id=getattr(cfg, "wandb_run_id", None) or getattr(cfg, "wandb_name", None),
+				resume=getattr(cfg, "wandb_resume", "allow"),
 				group=self._group,
 				tags=cfg_to_group(cfg, return_list=True) + [f"seed:{cfg.seed}"],
 				dir=self._log_dir,

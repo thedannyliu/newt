@@ -32,6 +32,8 @@ for DYNAMICS in mlp flow; do
       policy_arch="${POLICY}" \
       wandb_group="${WANDB_GROUP}" \
       wandb_name="${NAME}" \
+      wandb_run_id="${NAME}" \
+      wandb_resume=allow \
       exp_name="${NAME}" \
       data_dir="${DATA_DIR}"
   done
