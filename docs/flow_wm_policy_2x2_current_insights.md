@@ -55,3 +55,5 @@ Submitted eval job:
 | Job | Purpose | Partition/GPU | Array | Notes |
 | --- | --- | --- | --- | --- |
 | `9431612` | Single-GPU post-checkpoint eval for all four full-like cells | `gpu-h200`, 1x H200 | `0-3` | Uses latest `*_full.pt` checkpoint per cell and `EVAL_EPISODES=1`. |
+
+Job `9431612` failed before evaluation because `eval_checkpoint.py` instantiated `WorldModel` before `make_env(cfg)`, leaving `cfg.action_dim` unset. The eval script now constructs the environment first so `cfg.obs_shape`, `cfg.action_dim`, and `cfg.episode_length` match the training path before model initialization.

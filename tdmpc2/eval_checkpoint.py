@@ -35,12 +35,13 @@ def launch(cfg: Config):
 	torch.cuda.set_device(0)
 	set_seed(cfg.seed)
 
+	env = make_env(cfg)
 	model = WorldModel(cfg).to("cuda:0")
 	agent = TDMPC2(model, cfg)
 	logger = Logger(cfg)
 	trainer = Trainer(
 		cfg=cfg,
-		env=make_env(cfg),
+		env=env,
 		agent=agent,
 		buffer=None,
 		logger=logger,
