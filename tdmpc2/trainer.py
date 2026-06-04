@@ -1,4 +1,5 @@
 import os
+import random
 from collections import defaultdict, OrderedDict
 from time import time
 
@@ -43,6 +44,8 @@ class Trainer():
 		self._tds = TensorDict({}, batch_size=(self.cfg.episode_length+1, self.cfg.num_envs), device='cpu')
 		self._update_freq = self.cfg.num_envs * self.cfg.episode_length * self.cfg.world_size
 		self._update_tokens = 0
+		self._last_checkpoint_step = 0
+		self._last_replay_checkpoint_step = 0
 		self._eps_per_update_freq = int((cfg.episode_length / np.array(cfg.episode_lengths)).sum())
 		if cfg.rank == 0:
 			print('Architecture:', self.agent.model)
@@ -57,6 +60,57 @@ class Trainer():
 			episode=self._ep_idx,
 			elapsed_time=elapsed_time,
 			steps_per_second=self._step / elapsed_time
+		)
+
+	def state_dict(self, include_replay=False):
+		"""Return state required for interrupted training to resume."""
+		state = {
+			"trainer": {
+				"step": self._step,
+				"episode": self._ep_idx,
+				"update_tokens": self._update_tokens,
+				"last_checkpoint_step": self._last_checkpoint_step,
+				"last_replay_checkpoint_step": self._last_replay_checkpoint_step,
+			},
+			"rng": {
+				"python": random.getstate(),
+				"numpy": np.random.get_state(),
+				"torch": torch.get_rng_state(),
+				"cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+			},
+		}
+		if include_replay and self.cfg.save_replay:
+			state["replay"] = self.buffer.state_dict()
+		return state
+
+	def load_state_dict(self, state):
+		"""Restore trainer, RNG, and optional replay state."""
+		trainer_state = state.get("trainer", {})
+		self._step = trainer_state.get("step", self._step)
+		self._ep_idx = trainer_state.get("episode", self._ep_idx)
+		self._update_tokens = trainer_state.get("update_tokens", self._update_tokens)
+		self._last_checkpoint_step = trainer_state.get("last_checkpoint_step", self._last_checkpoint_step)
+		self._last_replay_checkpoint_step = trainer_state.get("last_replay_checkpoint_step", self._last_replay_checkpoint_step)
+		rng_state = state.get("rng", {})
+		if "python" in rng_state:
+			random.setstate(rng_state["python"])
+		if "numpy" in rng_state:
+			np.random.set_state(rng_state["numpy"])
+		if "torch" in rng_state:
+			torch.set_rng_state(rng_state["torch"].cpu())
+		if rng_state.get("cuda") is not None and torch.cuda.is_available():
+			torch.cuda.set_rng_state_all([state.cpu() for state in rng_state["cuda"]])
+		if "replay" in state:
+			self.buffer.load_state_dict(state["replay"])
+
+	def save_checkpoint(self, identifier, include_replay=False, upload_artifact=True):
+		"""Save a model checkpoint with optional full resume state."""
+		extra_state = self.state_dict(include_replay=include_replay)
+		self.logger.save_agent(
+			self.agent,
+			identifier,
+			extra_state=extra_state,
+			upload_artifact=upload_artifact and not include_replay,
 		)
 
 	def eval(self):
@@ -181,7 +235,9 @@ class Trainer():
 		if checkpoint:
 			if not os.path.exists(checkpoint):
 				raise FileNotFoundError(f'Checkpoint file not found: {checkpoint}')
-			self.agent.load(self.cfg.checkpoint)
+			checkpoint_state = self.agent.load(self.cfg.checkpoint)
+			if isinstance(checkpoint_state, dict) and "extra" in checkpoint_state:
+				self.load_state_dict(checkpoint_state["extra"])
 			if self.cfg.rank == 0:
 				print(colored(f'Loaded checkpoint from {self.cfg.checkpoint}.', 'blue', attrs=['bold']))
 		else:
@@ -197,9 +253,10 @@ class Trainer():
 			print(f'prior_coef is {self.agent.cfg.prior_coef}, setting to 1.0 for pretraining.')
 			self.agent.cfg.prior_coef = 1.0  # Use only behavior cloning loss
 			iterator = tqdm(range(self.cfg.demo_steps), desc='Pretraining') if self.cfg.rank == 0 else range(self.cfg.demo_steps)
+			pretrain_log_freq = max(1, int(self.cfg.demo_steps / 50))
 			for i in iterator:
 				pretrain_metrics = self.agent.update(self.buffer)
-				if i % int(self.cfg.demo_steps / 50) == 0:
+				if i % pretrain_log_freq == 0:
 					self.logger.pprint_pretrain(pretrain_metrics)
 			pretrain_metrics.update({
 				'step': 0,
@@ -210,12 +267,18 @@ class Trainer():
 			print(f'Set prior_coef to {self.agent.cfg.prior_coef} after pretraining.')
 			if self.cfg.rank == 0:
 				print('Pretraining complete.')
-			self.logger.save_agent(self.agent, f'{self._step:,}'.replace(',', '_'))
+			self.save_checkpoint(f'{self._step:,}'.replace(',', '_'), include_replay=False)
 
 		# Training loop
 		if self.cfg.rank == 0:
 			print(f'Training agent for {self.cfg.steps:,} steps...')
 		train_metrics = defaultdict(list)
+		obs, info = self.env.reset()
+		ep_reward = torch.zeros((self.cfg.num_envs,))
+		ep_len = torch.zeros((self.cfg.num_envs,), dtype=torch.int32)
+		done = torch.full((self.cfg.num_envs,), True, dtype=torch.bool)
+		self._next_action = None
+		self._tds[ep_len] = self.to_td(obs)
 		while self._step <= self.cfg.steps:
 
 			# Evaluate agent periodically
@@ -228,7 +291,7 @@ class Trainer():
 
 				# Save agent
 				if self._step % self.cfg.save_freq == 0 and self._step > 0:
-					self.logger.save_agent(self.agent, f'{self._step:,}'.replace(',', '_'))
+					self.save_checkpoint(f'{self._step:,}'.replace(',', '_'), include_replay=False)
 
 				# Reset environment and metrics
 				obs, info = self.env.reset()
@@ -241,13 +304,17 @@ class Trainer():
 			# Collect experience
 			use_mpc = self._step >= self.cfg.seeding_coef * self._update_freq
 			use_agent = self.cfg.finetune or (use_demos and self.cfg.demo_steps > 0) or use_mpc
+			action_start_time = time()
 			if use_agent:
 				torch.compiler.cudagraph_mark_step_begin()
 				action = self.agent(obs, t0=done, step=self._step, task=self._tasks, mpc=use_mpc)
 			else:
 				action = self.env.rand_act()
+			train_metrics['action_time'].append(time() - action_start_time)
 
+			env_start_time = time()
 			obs, reward, terminated, truncated, info = self.env.step(action)
+			train_metrics['env_step_time'].append(time() - env_start_time)
 			assert not terminated.any(), \
 				f'Unexpected termination signal received.'
 			ep_reward += reward
@@ -291,6 +358,9 @@ class Trainer():
 					self._ep_idx += self._eps_per_update_freq
 					for key in ['episode_reward', 'episode_success', 'episode_score', 'episode_length', 'episode_terminated']:
 						train_metrics[key] = torch.tensor(train_metrics[key], dtype=torch.float32).nanmean().item()
+					for key in ['action_time', 'env_step_time', 'update_time', 'num_updates']:
+						if len(train_metrics[key]) > 0:
+							train_metrics[key] = torch.tensor(train_metrics[key], dtype=torch.float32).nanmean().item()
 					train_metrics.update(self.common_metrics())
 					self.logger.log(train_metrics, 'train')
 					train_metrics = defaultdict(list)
@@ -300,9 +370,20 @@ class Trainer():
 				self._update_tokens += self.cfg.num_envs * self.cfg.world_size * self.cfg.utd
 				if self._update_tokens >= 1.0:
 					num_updates = int(self._update_tokens)
+					update_start_time = time()
 					for _ in range(num_updates):
 						_train_metrics = self.agent.update(self.buffer)
+					train_metrics['update_time'].append(time() - update_start_time)
+					train_metrics['num_updates'].append(num_updates)
 					train_metrics.update(_train_metrics)
 					self._update_tokens -= num_updates
+
+			if self._step > 0 and self.cfg.save_agent and self._step - self._last_checkpoint_step >= self.cfg.checkpoint_freq:
+				self._last_checkpoint_step = self._step
+				self.save_checkpoint(f'{self._step:,}'.replace(',', '_'), include_replay=False)
+			if self._step > 0 and self.cfg.save_agent and self.cfg.save_replay and \
+					self._step - self._last_replay_checkpoint_step >= self.cfg.replay_checkpoint_freq:
+				self._last_replay_checkpoint_step = self._step
+				self.save_checkpoint(f'{self._step:,}'.replace(',', '_') + '_full', include_replay=True, upload_artifact=False)
 		
 		self.logger.finish()

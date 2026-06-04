@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from common import layers, math, init
+from common.flow import ConditionalFlow, FlowPolicy
 from tensordict import TensorDict
 
 
@@ -34,9 +35,19 @@ class WorldModel(nn.Module):
 			for i in range(len(cfg.action_dims)):
 				self._action_masks[i, :cfg.action_dims[i]] = 1.
 		self._encoder = layers.enc(cfg)
-		self._dynamics = layers.mlp(cfg.latent_dim + cfg.action_dim + cfg.task_dim, 2*[cfg.mlp_dim], cfg.latent_dim, act=layers.SimNorm(cfg))
+		if cfg.dynamics_arch == "flow":
+			self._dynamics = ConditionalFlow(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		else:
+			self._dynamics = layers.mlp(cfg.latent_dim + cfg.action_dim + cfg.task_dim, 2*[cfg.mlp_dim], cfg.latent_dim, act=layers.SimNorm(cfg))
 		self._reward = layers.mlp(cfg.latent_dim + cfg.action_dim + cfg.task_dim, 2*[cfg.mlp_dim], max(cfg.num_bins, 1))
-		self._pi = layers.mlp(cfg.latent_dim + cfg.task_dim, 2*[cfg.mlp_dim], 2*cfg.action_dim)
+		if cfg.policy_arch == "flow":
+			self._pi = FlowPolicy(cfg)
+		else:
+			self._pi = layers.mlp(cfg.latent_dim + cfg.task_dim, 2*[cfg.mlp_dim], 2*cfg.action_dim)
 		self._Qs = layers.QOnlineTargetEnsemble(cfg)
 		self.apply(init.weight_init)
 		init.zero_(self._reward[-1].weight)
@@ -141,9 +152,28 @@ class WorldModel(nn.Module):
 		"""
 		Predicts the next latent state given the current latent state and action.
 		"""
-		z = self.task_emb(z, task)
-		z = torch.cat([z, a], dim=-1)
-		return self._dynamics(z)
+		z_task = self.task_emb(z, task)
+		cond = torch.cat([z_task, a], dim=-1)
+		if self.cfg.dynamics_arch == "flow":
+			residual = self._dynamics.sample(
+				cond,
+				base=torch.zeros_like(z),
+				steps=self.cfg.flow_steps,
+			)
+			return layers.SimNorm(self.cfg)(z + residual)
+		return self._dynamics(cond)
+
+	def dynamics_loss(self, z, a, target_z, task):
+		"""
+		Computes latent dynamics training loss for either MLP self-prediction
+		or flow-matched residual prediction.
+		"""
+		z_task = self.task_emb(z, task)
+		cond = torch.cat([z_task, a], dim=-1)
+		if self.cfg.dynamics_arch == "flow":
+			return self._dynamics.loss((target_z - z).detach(), cond).mean()
+		pred_z = self._dynamics(cond)
+		return torch.nn.functional.mse_loss(pred_z, target_z)
 
 	def reward(self, z, a, task):
 		"""
@@ -161,14 +191,17 @@ class WorldModel(nn.Module):
 		"""
 		z = self.task_emb(z, task)
 
+		action_mask = self._action_masks[task]  # shape: (*batch_dims, action_dim)
+		while action_mask.ndim < z.ndim:
+			action_mask = action_mask.unsqueeze(-2)
+		if self.cfg.policy_arch == "flow":
+			return self._pi(z, action_mask)
+
 		# Gaussian policy prior
 		mean, log_std = self._pi(z).chunk(2, dim=-1)
 		log_std = math.log_std(log_std, self.log_std_min, self.log_std_dif)
 		eps = torch.randn_like(mean)
 
-		action_mask = self._action_masks[task]  # shape: (*batch_dims, action_dim)
-		while action_mask.ndim < mean.ndim:
-			action_mask = action_mask.unsqueeze(-2)  # Add sequence dim (or other mid-batch dim)
 		action_mask = action_mask.expand_as(mean)  # Ensure shape matches mean
 
 		mean = mean * action_mask
@@ -194,6 +227,18 @@ class WorldModel(nn.Module):
 			"scaled_entropy": -log_prob * entropy_scale,
 		})
 		return action, info
+
+	def pi_bc_loss(self, z, action, task):
+		"""
+		Behavior-cloning loss for the configured policy prior.
+		Returns a per-timestep, per-batch tensor.
+		"""
+		if self.cfg.policy_arch == "flow":
+			z_task = self.task_emb(z, task)
+			action_mask = self._action_masks.index_select(0, task[0]).to(dtype=action.dtype, device=action.device)
+			return self._pi.loss(z_task, action, action_mask)
+		pi_action, pi_info = self.pi(z, task)
+		return math.masked_bc_per_timestep(pi_action, action, task, self._action_masks)
 
 	def Q(self, z, a, task, return_type='min', target=False, detach=False):
 		"""

@@ -21,6 +21,7 @@ class Config:
 
 	# environment
 	task: str = "soup"										# "soup" for multitask, see tdmpc2/common/__init__.py for task list
+	task_limit: Optional[int] = None						# optional prefix subset of tasks for smoke tests
 	obs: str = "state"										# observation type, one of ["state", "rgb"]
 	num_envs: int = 10										# number of parallel environments, overridden if task is "soup"
 	env_mode: str = "async"									# environment mode, one of ["async", "sync"]
@@ -87,10 +88,17 @@ class Config:
 	task_dim: int = 512										# task embedding dim, 512 assumes CLIP embeddings
 	num_q: int = 5											# number of Q-functions in ensemble, overridden by model_size
 	simnorm_dim: int = 8									# number of dims per simplex in simplicial embedding layer
+	dynamics_arch: str = "mlp"								# world model dynamics architecture, one of ["mlp", "flow"]
+	policy_arch: str = "gaussian"							# policy prior architecture, one of ["gaussian", "flow"]
+	flow_steps: int = 4										# Euler integration steps for flow dynamics / policy
+	flow_t_dim: int = 64									# sinusoidal time embedding dim for flow modules
+	flow_hidden_layers: int = 2								# number of MLP hidden layers in flow velocity nets
 
 	# logging
-	wandb_project: str = "<project>"						# wandb project name
-	wandb_entity: str = "<user>"							# wandb entity (user) name
+	wandb_project: Optional[str] = None						# wandb project name; defaults to WANDB_PROJECT / newt-flow-2x2
+	wandb_entity: Optional[str] = None						# wandb entity; defaults to WANDB_ENTITY
+	wandb_group: Optional[str] = None						# optional explicit wandb group
+	wandb_name: Optional[str] = None						# optional explicit wandb run name
 	enable_wandb: bool = True								# whether to enable wandb logging
 
 	# misc
@@ -99,6 +107,9 @@ class Config:
 	render_size: int = 224									# render size for rgb observations
 	save_video: bool = False								# whether to save evaluation videos
 	save_agent: bool = True									# whether to save agent checkpoints
+	checkpoint_freq: int = 500_000							# local checkpoint frequency in environment steps
+	replay_checkpoint_freq: int = 2_000_000					# full replay checkpoint frequency in environment steps
+	save_replay: bool = True								# whether to include online replay in full resume checkpoints
 	data_dir: str = "<path>/<to>/data"						# directory for demonstrations
 	seed: int = 1											# random seed
 
@@ -138,7 +149,7 @@ def parse_cfg(cfg):
 	Parses the experiment config dataclass. Mostly for convenience.
 	"""
 	# Convenience
-	cfg.work_dir = Path(hydra.utils.get_original_cwd()) / 'logs' / cfg.task / str(cfg.seed) / cfg.exp_name
+	cfg.work_dir = Path(hydra.utils.get_original_cwd()) / 'outputs' / 'logs' / cfg.task / str(cfg.seed) / cfg.exp_name
 	cfg.task_title = cfg.task.replace("-", " ").title()
 	cfg.bin_size = (cfg.vmax - cfg.vmin) / (cfg.num_bins-1)  # Bin size for discrete regression
 
@@ -151,8 +162,20 @@ def parse_cfg(cfg):
 		for k, v in MODEL_SIZE[cfg.model_size].items():
 			cfg[k] = v
 
+	assert cfg.dynamics_arch in {"mlp", "flow"}, \
+		f'Invalid dynamics_arch {cfg.dynamics_arch}. Must be one of ["mlp", "flow"]'
+	assert cfg.policy_arch in {"gaussian", "flow"}, \
+		f'Invalid policy_arch {cfg.policy_arch}. Must be one of ["gaussian", "flow"]'
+	assert cfg.flow_t_dim % 2 == 0, "flow_t_dim must be even"
+	cfg.wandb_project = cfg.wandb_project or os.getenv("WANDB_PROJECT", "newt-flow-2x2")
+	cfg.wandb_entity = cfg.wandb_entity or os.getenv("WANDB_ENTITY", None)
+
 	# Set defaults
 	cfg.tasks = TASK_SET.get(cfg.task, [cfg.task] * cfg.num_envs)
+	if cfg.task_limit is not None:
+		assert cfg.task == "soup", "task_limit is only supported for soup smoke tests"
+		assert cfg.task_limit > 0, "task_limit must be positive"
+		cfg.tasks = cfg.tasks[:cfg.task_limit]
 	cfg.num_tasks = len(dict.fromkeys(cfg.tasks))  # Unique tasks
 	cfg.global_tasks = deepcopy(cfg.tasks)
 	cfg.num_global_tasks = cfg.num_tasks

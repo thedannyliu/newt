@@ -1,6 +1,7 @@
 import os
 import datetime
 import re
+import json
 from collections import defaultdict
 from pathlib import Path
 
@@ -75,6 +76,8 @@ def cfg_to_group(cfg, return_list=False):
 	Return a wandb-safe group name for logging.
 	Optionally returns group name as list.
 	"""
+	if getattr(cfg, "wandb_group", None):
+		return [cfg.wandb_group] if return_list else cfg.wandb_group
 	lst = [cfg.task, re.sub("[^0-9a-zA-Z]+", "-", cfg.exp_name)]
 	return lst if return_list else "-".join(lst)
 
@@ -114,36 +117,38 @@ class Logger:
 		self.rank = cfg.rank
 		self.project = cfg.get("wandb_project", "none")
 		self.entity = cfg.get("wandb_entity", "none")
-		if self.rank > 0 or not cfg.enable_wandb or self.project == "none" or self.entity == "none":
-			if self.rank == 0:
-				print(colored("Wandb disabled.", "blue", attrs=["bold"]))
-			else:
-				print(colored(f"Logging disabled for rank {self.rank}.", "blue", attrs=["bold"]))
-			cfg.save_agent = False
-			cfg.save_video = False
+		if self.rank > 0:
+			print(colored(f"Logging disabled for rank {self.rank}.", "blue", attrs=["bold"]))
 			self._save_agent = False
 			self._wandb = None
 			self._video = None
 			return
 		self._log_dir = Path(make_dir(cfg.work_dir))
 		self._model_dir = make_dir(self._log_dir / "models")
+		self._metrics_fp = self._log_dir / "metrics.jsonl"
 		self._save_agent = cfg.save_agent
 		self._group = cfg_to_group(cfg)
 		self._seed = cfg.seed
 		self._eval = []
 		print_run(cfg)
-		import wandb
-		wandb.init(
-			project=self.project,
-			entity=self.entity,
-			name=str(cfg.seed),
-			group=self._group,
-			tags=cfg_to_group(cfg, return_list=True) + [f"seed:{cfg.seed}"],
-			dir=self._log_dir,
-			config=cfg,
-		)
-		print(colored("Logs will be synced with wandb.", "blue", attrs=["bold"]))
-		self._wandb = wandb
+		self._wandb = None
+		if cfg.enable_wandb:
+			if self.project in {None, "none"} or self.entity in {None, "none"}:
+				raise ValueError("W&B is enabled but wandb_project/wandb_entity is missing. Set WANDB_PROJECT/WANDB_ENTITY or pass Hydra overrides.")
+			import wandb
+			wandb.init(
+				project=self.project,
+				entity=self.entity,
+				name=getattr(cfg, "wandb_name", None) or str(cfg.seed),
+				group=self._group,
+				tags=cfg_to_group(cfg, return_list=True) + [f"seed:{cfg.seed}"],
+				dir=self._log_dir,
+				config=cfg,
+			)
+			print(colored("Logs will be synced with wandb.", "blue", attrs=["bold"]))
+			self._wandb = wandb
+		else:
+			print(colored("Wandb disabled; local logging/checkpointing remains enabled.", "blue", attrs=["bold"]))
 		self._video = (
 			VideoRecorder(cfg, self._wandb)
 			if self._wandb and cfg.save_video
@@ -154,11 +159,11 @@ class Logger:
 	def video(self):
 		return self._video
 
-	def save_agent(self, agent=None, identifier='final'):
+	def save_agent(self, agent=None, identifier='final', extra_state=None, upload_artifact=True):
 		if self._save_agent and agent:
 			fp = self._model_dir / f'{str(identifier)}.pt'
-			agent.save(fp)
-			if self._wandb:
+			agent.save(fp, extra_state=extra_state)
+			if self._wandb and upload_artifact:
 				artifact = self._wandb.Artifact(
 					self._group + '-' + str(self._seed) + '-' + str(identifier),
 					type='model',
@@ -235,6 +240,10 @@ class Logger:
 		if self.rank > 0:
 			return
 		assert category in CAT_TO_COLOR.keys(), f"invalid category: {category}"
+		with open(self._metrics_fp, "a") as f:
+			row = {"category": category}
+			row.update({k: (v.item() if hasattr(v, "item") else v) for k, v in d.items()})
+			f.write(json.dumps(row) + "\n")
 		if self._wandb:
 			_d = dict()
 			for k, v in d.items():

@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import torch
-import torch.nn.functional as F
 from tensordict import TensorDict
 
 from common import math
@@ -62,29 +61,36 @@ class TDMPC2(torch.nn.Module):
 	def _maybe_compile(self, fn):
 		return torch.compile(fn, mode="reduce-overhead") if self.cfg.compile else fn
 
-	def save(self, fp):
+	def save(self, fp, extra_state=None):
 		"""
 		Save state dict of the agent to filepath.
 
 		Args:
 			fp (str): Filepath to save state dict to.
 		"""
-		torch.save({
+		cfg_state = vars(self.cfg) if hasattr(self.cfg, "__dict__") else dict(self.cfg)
+		state = {
 			"model": self.model.state_dict(),
 			"optim": self.optim.state_dict(),
 			"pi_optim": self.pi_optim.state_dict(),
 			"scale": self.scale.state_dict(),
-		}, fp)
+			"cfg": cfg_state,
+		}
+		if hasattr(self, "scheduler"):
+			state["scheduler"] = self.scheduler.state_dict()
+		if extra_state is not None:
+			state["extra"] = extra_state
+		torch.save(state, fp)
 
-	def load(self, fp):
+	def load(self, fp, load_training_state=True):
 		"""
 		Load a saved state dict from filepath (or dictionary) into current agent.
 
 		Args:
 			fp (str): Filepath to load state dict from.
 		"""
-		state_dict = torch.load(fp, map_location=torch.get_default_device(), weights_only=False)
-		state_dict = state_dict["model"] if "model" in state_dict else state_dict
+		checkpoint = torch.load(fp, map_location=self.device, weights_only=False)
+		state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
 		
 		# Retain task_emb and action_masks if finetuning
 		if self.cfg.finetune:
@@ -94,6 +100,16 @@ class TDMPC2(torch.nn.Module):
 
 		state_dict = api_model_conversion(self.model.state_dict(), state_dict)
 		self.model.load_state_dict(state_dict)
+		if load_training_state and "model" in checkpoint:
+			if "optim" in checkpoint:
+				self.optim.load_state_dict(checkpoint["optim"])
+			if "pi_optim" in checkpoint:
+				self.pi_optim.load_state_dict(checkpoint["pi_optim"])
+			if "scale" in checkpoint:
+				self.scale.load_state_dict(checkpoint["scale"])
+			if "scheduler" in checkpoint and hasattr(self, "scheduler"):
+				self.scheduler.load_state_dict(checkpoint["scheduler"])
+		return checkpoint
 
 	@torch.no_grad()
 	def _pi(self, obs, task=None):
@@ -259,7 +275,7 @@ class TDMPC2(torch.nn.Module):
 		pi_action, info = self.model.pi(zs, task)
 
 		# Policy prior loss
-		pi_prior_loss = (math.masked_bc_per_timestep(pi_action[:-1], action, task, self.model._action_masks) \
+		pi_prior_loss = (self.model.pi_bc_loss(zs[:-1], action, task) \
 				   * self.rho[:-1, None]).sum(0)
 
 		# Normalized Q-loss
@@ -348,8 +364,8 @@ class TDMPC2(torch.nn.Module):
 		zs[0] = z
 		consistency_loss = 0
 		for t, (_action, _next_z, _task) in enumerate(zip(action.unbind(0), next_z.unbind(0), task.unbind(0))):
+			consistency_loss = consistency_loss + self.model.dynamics_loss(z, _action, _next_z, _task) * self.rho[t]
 			z = self.model.next(z, _action, _task)
-			consistency_loss = consistency_loss + F.mse_loss(z, _next_z) * self.rho[t]
 			zs[t+1] = z
 
 		# Predictions
@@ -366,8 +382,8 @@ class TDMPC2(torch.nn.Module):
 		value_loss = value_loss / self.cfg.num_q
 
 		if not self.maxq_pi: # Behavior cloning
-			pi_action, pi_info = self.model.pi(_zs, task)
-			bc_loss = math.masked_bc_per_timestep(pi_action, action, task, self.model._action_masks)
+			_, pi_info = self.model.pi(_zs, task)
+			bc_loss = self.model.pi_bc_loss(_zs, action, task)
 			entropy_loss = -self.cfg.entropy_coef*pi_info["scaled_entropy"].squeeze(-1)
 			pi_prior_loss = ((bc_loss + entropy_loss) * self.rho[:-1, None]).mean()
 			pi_info = TensorDict({

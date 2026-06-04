@@ -104,6 +104,23 @@ class Buffer:
 		assert self._num_eps > 0, "Buffer is empty, nothing to save."
 		torch.save(self._buffer.storage._storage, path)
 
+	def state_dict(self):
+		"""Return replay state needed to resume online collection."""
+		data = self._storage.get(slice(0, len(self._buffer))).cpu()
+		return {
+			"num_eps": self._num_eps,
+			"num_demos": self._num_demos,
+			"data": data,
+		}
+
+	def load_state_dict(self, state):
+		"""Restore replay state saved by state_dict."""
+		self._buffer.empty()
+		if len(state["data"]) > 0:
+			self._buffer.extend(state["data"])
+		self._num_eps = state["num_eps"]
+		self._num_demos = state.get("num_demos", 0)
+
 	def load_demos(self, tds):
 		"""Load a demonstration dataset into the buffer."""
 		assert self._num_eps == 0, "Expected an empty buffer when loading demos!"
@@ -210,3 +227,22 @@ class EnsembleBuffer(Buffer):
 			self._out_task[:, self._batch_size:] = task1
 		
 		return self._out_obs, self._out_action, self._out_reward, self._out_task
+
+	def state_dict(self):
+		"""Save only the online buffer state; demos are reloaded from data_dir."""
+		data = self._storage.get(slice(0, len(self._buffer))).cpu()
+		if len(data) > 0:
+			data = data[data["episode"] >= self._num_demos]
+		return {
+			"num_eps": self._num_eps,
+			"num_demos": self._num_demos,
+			"offline_num_demos": self._offline.num_eps,
+			"data": data,
+		}
+
+	def load_state_dict(self, state):
+		"""Restore compact online data after demonstrations have been loaded."""
+		if len(state["data"]) > 0:
+			self._buffer.extend(state["data"])
+		self._num_eps = state["num_eps"]
+		self._num_demos = state.get("num_demos", self._num_demos)

@@ -1,6 +1,10 @@
 # Newt
 outputs/
 logs/
+data/
+checkpoints/
+wandb/
+*.pt
 .vscode/
 
 # Byte-compiled / optimized / DLL files
