@@ -34,6 +34,15 @@ CELLS=(
 )
 read -r DYNAMICS POLICY <<< "${CELLS[${SLURM_ARRAY_TASK_ID}]}"
 NAME="wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
+MODEL_DIR="outputs/logs/soup/${SEED}/${NAME}/models"
+CHECKPOINT_ARGS=()
+if [[ -d "${MODEL_DIR}" ]]; then
+  LATEST_CHECKPOINT="$(find "${MODEL_DIR}" -maxdepth 1 -name '*_full.pt' -print | sort -V | tail -n 1)"
+  if [[ -n "${LATEST_CHECKPOINT}" ]]; then
+    CHECKPOINT_ARGS=(checkpoint="${LATEST_CHECKPOINT}")
+    echo "Resuming ${NAME} from ${LATEST_CHECKPOINT}"
+  fi
+fi
 
 "${PYTHON_BIN}" tdmpc2/train.py \
   task=soup \
@@ -55,4 +64,5 @@ NAME="wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
   wandb_run_id="${NAME}" \
   wandb_resume=allow \
   exp_name="${NAME}" \
-  data_dir="${DATA_DIR}"
+  data_dir="${DATA_DIR}" \
+  "${CHECKPOINT_ARGS[@]}"
