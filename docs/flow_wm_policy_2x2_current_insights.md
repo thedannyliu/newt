@@ -49,3 +49,9 @@ The table below uses the latest train row, which is at 400k steps for each singl
 ## Next Eval Step
 
 Use `tdmpc2/eval_checkpoint.py` through `scripts/slurm_flow_single_gpu_eval.sbatch` to evaluate the latest single-GPU full-like checkpoints. This writes eval-only metrics under `outputs/logs/soup/1/eval-single-full_*` and logs to W&B without uploading checkpoint artifacts.
+
+Submitted eval job:
+
+| Job | Purpose | Partition/GPU | Array | Notes |
+| --- | --- | --- | --- | --- |
+| `9431612` | Single-GPU post-checkpoint eval for all four full-like cells | `gpu-h200`, 1x H200 | `0-3` | Uses latest `*_full.pt` checkpoint per cell and `EVAL_EPISODES=1`. |
