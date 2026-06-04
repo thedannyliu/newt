@@ -120,6 +120,7 @@ class Logger:
 		if self.rank > 0:
 			print(colored(f"Logging disabled for rank {self.rank}.", "blue", attrs=["bold"]))
 			self._save_agent = False
+			self._wandb_upload_artifacts = False
 			self._wandb = None
 			self._video = None
 			return
@@ -127,6 +128,7 @@ class Logger:
 		self._model_dir = make_dir(self._log_dir / "models")
 		self._metrics_fp = self._log_dir / "metrics.jsonl"
 		self._save_agent = cfg.save_agent
+		self._wandb_upload_artifacts = cfg.wandb_upload_artifacts
 		self._group = cfg_to_group(cfg)
 		self._seed = cfg.seed
 		self._eval = []
@@ -165,7 +167,7 @@ class Logger:
 		if self._save_agent and agent:
 			fp = self._model_dir / f'{str(identifier)}.pt'
 			agent.save(fp, extra_state=extra_state)
-			if self._wandb and upload_artifact and self.cfg.wandb_upload_artifacts:
+			if self._wandb and upload_artifact and self._wandb_upload_artifacts:
 				artifact = self._wandb.Artifact(
 					self._group + '-' + str(self._seed) + '-' + str(identifier),
 					type='model',

@@ -142,3 +142,11 @@ Repair submissions after runtime-cache fix:
 | `9430629` | Single-GPU reduced debug | `gpu-h200`, 1x H200 | `0` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=20000`, and `CUDA_LAUNCH_BLOCKING=1` to locate the reduced-mode scatter/index failure. |
 
 Failed repair weights created by `9428344` and `9428345` were removed again, leaving only `single-full_wm-flow_pi-flow_seed-1/models` and `wm-mlp_pi-gaussian_seed-1/models`.
+
+Jobs `9430628` and `9430629` then failed at the post-pretraining checkpoint save with:
+
+```text
+AttributeError: 'Logger' object has no attribute 'cfg'
+```
+
+Root cause: the new W&B artifact-upload flag was read through `self.cfg` inside `Logger.save_agent()`, but `Logger` does not keep the full config object. Fix: `Logger` now stores `_wandb_upload_artifacts` during initialization and uses that field when deciding whether to upload checkpoint artifacts.
