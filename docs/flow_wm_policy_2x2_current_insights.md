@@ -65,3 +65,9 @@ Replacement eval job:
 | `9432390` | Single-GPU post-checkpoint eval after config-init fix | `gpu-h200`, 1x H200 | `0-3` | Uses the same checkpoint selection as `9431612` with the fixed eval script. |
 
 Job `9432390` failed while constructing the full 200-task async eval environment. All four array tasks were scheduled close together on the same node, so OGBench/MuJoCo workers attempted to allocate many EGL contexts at once and hit `EGL_BAD_ALLOC`, followed by async worker `BrokenPipeError`. The eval Slurm script now limits the array to one active task at a time (`0-3%1`) to keep the full 200-task eval protocol while avoiding concurrent EGL allocation pressure from sibling array tasks.
+
+Replacement serialized eval job:
+
+| Job | Purpose | Partition/GPU | Array | Notes |
+| --- | --- | --- | --- | --- |
+| `9432574` | Serialized single-GPU post-checkpoint eval | `gpu-h200`, 1x H200 | `0-3%1` | Full 200-task eval for each cell, one array task active at a time. |
