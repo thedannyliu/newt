@@ -8,8 +8,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:h200:1
-#SBATCH --mem=128G
-#SBATCH --time=02:00:00
+#SBATCH --mem=192G
+#SBATCH --time=04:00:00
 #SBATCH --qos=embers
 
 set -euo pipefail
@@ -21,6 +21,7 @@ SEED="${SEED:-1}"
 DIAG_MODE="${DIAG_MODE:-pilot}"
 WANDB_GROUP="${WANDB_GROUP:-single-gpu-h200-diagnostics}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
+export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 
 if [[ -z "${WANDB_ENTITY:-}" ]]; then
   echo "WANDB_ENTITY must be set for diagnostic runs." >&2
