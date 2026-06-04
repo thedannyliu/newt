@@ -3,11 +3,11 @@
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
 #SBATCH --array=0-3
-#SBATCH --partition=gpu-h200,gpu-h100,gpu-a100,gpu-l40s,gpu-rtxpro-blackwell
+#SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
-#SBATCH --gres=gpu:8
+#SBATCH --gres=gpu:h200:8
 #SBATCH --mem=512G
 #SBATCH --time=08:00:00
 #SBATCH --qos=embers
