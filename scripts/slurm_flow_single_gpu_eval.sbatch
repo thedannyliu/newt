@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-single-eval
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-3
+#SBATCH --array=0-3%1
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
