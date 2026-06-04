@@ -20,6 +20,7 @@ DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mm
 SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-state20m-soup-2x2}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
+export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 
 if [[ -z "${WANDB_ENTITY:-}" ]]; then
   echo "WANDB_ENTITY must be set for formal runs." >&2

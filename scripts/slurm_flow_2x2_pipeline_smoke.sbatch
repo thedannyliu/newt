@@ -18,6 +18,7 @@ mkdir -p outputs/slurm
 PYTHON_BIN="${PYTHON_BIN:-/storage/project/r-agarg35-0/eliu354/envs/newt_official_20260602/bin/python}"
 DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mmbench_demos}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
+export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 
 CELLS=(
   "mlp gaussian"
