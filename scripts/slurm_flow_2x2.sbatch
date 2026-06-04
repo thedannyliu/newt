@@ -21,6 +21,9 @@ SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-state20m-soup-2x2}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
+export TMPDIR="${TMPDIR:-/tmp}"
+export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-${TMPDIR}/torchinductor_${USER}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}}"
+mkdir -p "${TORCHINDUCTOR_CACHE_DIR}"
 
 if [[ -z "${WANDB_ENTITY:-}" ]]; then
   echo "WANDB_ENTITY must be set for formal runs." >&2

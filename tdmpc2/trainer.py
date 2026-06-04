@@ -46,6 +46,7 @@ class Trainer():
 		self._update_tokens = 0
 		self._last_checkpoint_step = 0
 		self._last_replay_checkpoint_step = 0
+		self._episode_boundary_offset = 0
 		self._eps_per_update_freq = int((cfg.episode_length / np.array(cfg.episode_lengths)).sum())
 		if cfg.rank == 0:
 			print('Architecture:', self.agent.model)
@@ -71,6 +72,7 @@ class Trainer():
 				"update_tokens": self._update_tokens,
 				"last_checkpoint_step": self._last_checkpoint_step,
 				"last_replay_checkpoint_step": self._last_replay_checkpoint_step,
+				"episode_boundary_offset": self._episode_boundary_offset,
 			},
 			"rng": {
 				"python": random.getstate(),
@@ -91,6 +93,10 @@ class Trainer():
 		self._update_tokens = trainer_state.get("update_tokens", self._update_tokens)
 		self._last_checkpoint_step = trainer_state.get("last_checkpoint_step", self._last_checkpoint_step)
 		self._last_replay_checkpoint_step = trainer_state.get("last_replay_checkpoint_step", self._last_replay_checkpoint_step)
+		self._episode_boundary_offset = trainer_state.get(
+			"episode_boundary_offset",
+			self._step % self._update_freq,
+		)
 		rng_state = state.get("rng", {})
 		if "python" in rng_state:
 			random.setstate(rng_state["python"])
@@ -353,8 +359,8 @@ class Trainer():
 				
 				# Log and reset metrics if enough data is collected
 				if max_ep_len >= self.cfg.episode_length:
-					assert self._step % self._update_freq == 0, \
-						f'Step {self._step} is not a multiple of update frequency {self._update_freq}.'
+					assert self._step % self._update_freq == self._episode_boundary_offset, \
+						f'Step {self._step} does not match expected episode-boundary offset {self._episode_boundary_offset} for update frequency {self._update_freq}.'
 					self._ep_idx += self._eps_per_update_freq
 					for key in ['episode_reward', 'episode_success', 'episode_score', 'episode_length', 'episode_terminated']:
 						train_metrics[key] = torch.tensor(train_metrics[key], dtype=torch.float32).nanmean().item()
