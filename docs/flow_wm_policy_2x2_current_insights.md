@@ -1,0 +1,51 @@
+# Flow WM/Policy 2x2 Current Insights
+
+Last updated: 2026-06-04
+
+## Scope
+
+This note summarizes the results currently available from the single-GPU full-like H200 runs and the formal baseline. These are not yet final formal 8-GPU results because the replacement formal 2x2 job is still pending.
+
+The local aggregate CSV is:
+
+```text
+outputs/analysis/single_full_2x2_summary.csv
+```
+
+## Current Checkpoints
+
+| Run | Latest full checkpoint | Last train metric step |
+| --- | ---: | ---: |
+| `single-full_wm-mlp_pi-gaussian_seed-1` | 500,000 | 400,000 |
+| `single-full_wm-flow_pi-gaussian_seed-1` | 500,000 | 400,000 |
+| `single-full_wm-mlp_pi-flow_seed-1` | 500,000 | 400,000 |
+| `single-full_wm-flow_pi-flow_seed-1` | 400,000 | 400,000 |
+| `wm-mlp_pi-gaussian_seed-1` | 1,000,000 | 1,000,000 |
+
+## Single-GPU Full-Like Timing
+
+The table below uses the latest train row, which is at 400k steps for each single-GPU run.
+
+| World model | Policy | Train score | SPS | Action time | Action time vs baseline | SPS vs baseline |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| MLP | Gaussian | 0.0367 | 939.4 | 0.00139 s | 1.00x | 1.00x |
+| Flow | Gaussian | 0.0272 | 942.7 | 0.00127 s | 0.91x | 1.00x |
+| MLP | Flow | 0.0319 | 920.3 | 0.00327 s | 2.35x | 0.98x |
+| Flow | Flow | 0.0300 | 792.7 | 0.00348 s | 2.50x | 0.84x |
+
+## Early Insights
+
+- Flow policy is the clear action-selection overhead source in the single-GPU setting. The flow-policy cells have about 2.35-2.50x higher action time than the Gaussian-policy baseline.
+- Flow world model alone does not currently show an action-time penalty because the timing metric measures action selection, not model update cost. Update timing is still sparse in these short runs because the trainer logs at large episode/update boundaries.
+- End-to-end SPS remains close to baseline for `mlp + flow` despite the higher action time, likely because environment stepping dominates much of the wall time. `flow + flow` is the only cell with a visible SPS drop at this scale.
+- Current train scores are early and low across all cells. The baseline has the highest 400k train score among the single-GPU runs, but the gap is not enough to draw final performance conclusions.
+- The current `eval` rows in the original training logs are pretraining/initial eval rows, not post-checkpoint eval rows. Dedicated checkpoint eval jobs are needed before making a score-based comparison table.
+
+## Formal Status
+
+- Formal baseline `wm-mlp_pi-gaussian_seed-1` has reached 1M train steps with last train score 0.2083 and SPS 200.7.
+- Formal replacement job `9431231` is still pending on H200. Formal flow cells are therefore not ready for final 2x2 comparison.
+
+## Next Eval Step
+
+Use `tdmpc2/eval_checkpoint.py` through `scripts/slurm_flow_single_gpu_eval.sbatch` to evaluate the latest single-GPU full-like checkpoints. This writes eval-only metrics under `outputs/logs/soup/1/eval-single-full_*` and logs to W&B without uploading checkpoint artifacts.
