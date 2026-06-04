@@ -165,7 +165,7 @@ class Logger:
 		if self._save_agent and agent:
 			fp = self._model_dir / f'{str(identifier)}.pt'
 			agent.save(fp, extra_state=extra_state)
-			if self._wandb and upload_artifact:
+			if self._wandb and upload_artifact and self.cfg.wandb_upload_artifacts:
 				artifact = self._wandb.Artifact(
 					self._group + '-' + str(self._seed) + '-' + str(identifier),
 					type='model',

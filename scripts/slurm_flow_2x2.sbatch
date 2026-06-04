@@ -21,9 +21,14 @@ SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-state20m-soup-2x2}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
-export TMPDIR="${TMPDIR:-/tmp}"
-export TORCHINDUCTOR_CACHE_DIR="${TORCHINDUCTOR_CACHE_DIR:-${TMPDIR}/torchinductor_${USER}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}}"
-mkdir -p "${TORCHINDUCTOR_CACHE_DIR}"
+RUNTIME_ROOT="${RUNTIME_ROOT:-outputs/runtime/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}}"
+export TMPDIR="${RUNTIME_ROOT}/tmp"
+export XDG_CACHE_HOME="${RUNTIME_ROOT}/xdg_cache"
+export WANDB_CACHE_DIR="${RUNTIME_ROOT}/wandb_cache"
+export WANDB_DATA_DIR="${RUNTIME_ROOT}/wandb_data"
+export WANDB_ARTIFACT_DIR="${RUNTIME_ROOT}/wandb_artifacts"
+export TORCHINDUCTOR_CACHE_DIR="${RUNTIME_ROOT}/torchinductor"
+mkdir -p "${TMPDIR}" "${XDG_CACHE_HOME}" "${WANDB_CACHE_DIR}" "${WANDB_DATA_DIR}" "${WANDB_ARTIFACT_DIR}" "${TORCHINDUCTOR_CACHE_DIR}"
 
 if [[ -z "${WANDB_ENTITY:-}" ]]; then
   echo "WANDB_ENTITY must be set for formal runs." >&2
@@ -57,6 +62,7 @@ fi
   demo_steps=200000 \
   seed="${SEED}" \
   enable_wandb=true \
+  wandb_upload_artifacts=false \
   save_agent=true \
   save_replay=true \
   checkpoint_freq=500000 \

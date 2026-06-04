@@ -120,3 +120,15 @@ Metrics, W&B records, and Slurm logs were kept. Remaining local model directorie
 - `outputs/logs/soup/1/wm-mlp_pi-gaussian_seed-1/models`
 
 The cleanup reduced `outputs/logs` from approximately 108 GB to 19 GB.
+
+## Runtime Cache Fix
+
+On 2026-06-04, single-GPU repair jobs `9428344` and `9428345` failed after startup because W&B artifact staging and temporary files still used the login-node HOME filesystem quota. HOME was at its 20 GB quota, while project storage had available capacity.
+
+Fixes applied:
+
+- Slurm scripts now set `TMPDIR`, `XDG_CACHE_HOME`, `WANDB_CACHE_DIR`, `WANDB_DATA_DIR`, `WANDB_ARTIFACT_DIR`, and `TORCHINDUCTOR_CACHE_DIR` under `outputs/runtime/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}`.
+- Added `wandb_upload_artifacts` config. Slurm jobs set `wandb_upload_artifacts=false`, so W&B metrics continue to sync while checkpoints remain in local `outputs/logs` without a second artifact-staging copy.
+- Cleared HOME cache directories `.cache/stable-pretraining` and `.cache/wandb`, reducing HOME usage from the 20 GB quota to about 11.2 GB.
+
+The old pending formal job `9428343` should be canceled and resubmitted with the fixed Slurm script snapshot.

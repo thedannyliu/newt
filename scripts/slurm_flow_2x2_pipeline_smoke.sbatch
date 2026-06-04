@@ -19,6 +19,14 @@ PYTHON_BIN="${PYTHON_BIN:-/storage/project/r-agarg35-0/eliu354/envs/newt_officia
 DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mmbench_demos}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
+RUNTIME_ROOT="${RUNTIME_ROOT:-outputs/runtime/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}}"
+export TMPDIR="${RUNTIME_ROOT}/tmp"
+export XDG_CACHE_HOME="${RUNTIME_ROOT}/xdg_cache"
+export WANDB_CACHE_DIR="${RUNTIME_ROOT}/wandb_cache"
+export WANDB_DATA_DIR="${RUNTIME_ROOT}/wandb_data"
+export WANDB_ARTIFACT_DIR="${RUNTIME_ROOT}/wandb_artifacts"
+export TORCHINDUCTOR_CACHE_DIR="${RUNTIME_ROOT}/torchinductor"
+mkdir -p "${TMPDIR}" "${XDG_CACHE_HOME}" "${WANDB_CACHE_DIR}" "${WANDB_DATA_DIR}" "${WANDB_ARTIFACT_DIR}" "${TORCHINDUCTOR_CACHE_DIR}"
 
 CELLS=(
   "mlp gaussian"
@@ -42,6 +50,7 @@ fi
   steps=6000 \
   demo_steps=2 \
   seed=1 \
+  wandb_upload_artifacts=false \
   save_agent=true \
   save_replay=true \
   checkpoint_freq=1000 \

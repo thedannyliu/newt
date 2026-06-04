@@ -102,6 +102,7 @@ class Config:
 	wandb_run_id: Optional[str] = None						# stable wandb run id for resume
 	wandb_resume: str = "allow"								# wandb resume policy
 	enable_wandb: bool = True								# whether to enable wandb logging
+	wandb_upload_artifacts: bool = True						# whether to upload checkpoint artifacts to wandb
 
 	# misc
 	multiproc: bool = False									# whether to use multiple GPUs (will use all visible GPUs)
