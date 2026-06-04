@@ -160,3 +160,27 @@ Repair submissions after the logger fix:
 | `9431233` | Single-GPU reduced debug | `gpu-h200`, 1x H200 | `0` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=20000`, and `CUDA_LAUNCH_BLOCKING=1`. |
 
 Failed short checkpoints created by `9430628` and `9430629` were removed before these submissions.
+
+Outcome observed on 2026-06-04:
+
+| Job | Outcome |
+| --- | --- |
+| `9431231` | Formal 2x2 remains pending on `gpu-h200` with reason `Priority`. |
+| `9431232` | Single-GPU full repair completed for arrays `0-2` with no stderr errors. Each run reached local checkpoints through `500_000_full.pt`. |
+| `9431233` | Reduced debug completed with no stderr errors; no reduced-mode CUDA scatter/index failure reproduced after the logger fix. |
+
+Single-GPU full repair metrics:
+
+| Run | Last train step | Last train score | Approx SPS | Latest full checkpoint |
+| --- | ---: | ---: | ---: | --- |
+| `single-full_wm-mlp_pi-gaussian_seed-1` | 400,000 | 0.0367 | 939.4 | `500_000_full.pt` |
+| `single-full_wm-flow_pi-gaussian_seed-1` | 400,000 | 0.0272 | 942.7 | `500_000_full.pt` |
+| `single-full_wm-mlp_pi-flow_seed-1` | 400,000 | 0.0319 | 920.3 | `500_000_full.pt` |
+
+Reduced debug checkpoints were removed after completion. Remaining model directories:
+
+- `outputs/logs/soup/1/single-full_wm-flow_pi-flow_seed-1/models`
+- `outputs/logs/soup/1/single-full_wm-flow_pi-gaussian_seed-1/models`
+- `outputs/logs/soup/1/single-full_wm-mlp_pi-flow_seed-1/models`
+- `outputs/logs/soup/1/single-full_wm-mlp_pi-gaussian_seed-1/models`
+- `outputs/logs/soup/1/wm-mlp_pi-gaussian_seed-1/models`
