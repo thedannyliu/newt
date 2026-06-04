@@ -3,11 +3,12 @@
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
 #SBATCH --array=0-3
+#SBATCH --partition=gpu-h200,gpu-h100,gpu-a100,gpu-l40s,gpu-rtxpro-blackwell
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --gres=gpu:1
-#SBATCH --mem=256G
+#SBATCH --cpus-per-task=64
+#SBATCH --gres=gpu:8
+#SBATCH --mem=512G
 #SBATCH --time=72:00:00
 #SBATCH --qos=embers
 
@@ -38,6 +39,7 @@ NAME="wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
   task=soup \
   model_size=L \
   obs=state \
+  multiproc=true \
   steps=100000000 \
   demo_steps=200000 \
   seed="${SEED}" \
