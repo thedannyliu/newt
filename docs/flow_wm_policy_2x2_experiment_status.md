@@ -150,3 +150,13 @@ AttributeError: 'Logger' object has no attribute 'cfg'
 ```
 
 Root cause: the new W&B artifact-upload flag was read through `self.cfg` inside `Logger.save_agent()`, but `Logger` does not keep the full config object. Fix: `Logger` now stores `_wandb_upload_artifacts` during initialization and uses that field when deciding whether to upload checkpoint artifacts.
+
+Repair submissions after the logger fix:
+
+| Job | Purpose | Partition/GPU | Array | Notes |
+| --- | --- | --- | --- | --- |
+| `9431231` | Formal 2x2 replacement/continuation | `gpu-h200`, 8x H200 | `0-3` | Submitted after canceling stale pending job `9430627`; includes runtime cache and logger artifact fixes. |
+| `9431232` | Single-GPU full repair | `gpu-h200`, 1x H200 | `0-2` | Uses `DIAG_MODE=full`, `DIAG_STEPS=500000`, and W&B metrics without artifact staging. |
+| `9431233` | Single-GPU reduced debug | `gpu-h200`, 1x H200 | `0` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=20000`, and `CUDA_LAUNCH_BLOCKING=1`. |
+
+Failed short checkpoints created by `9430628` and `9430629` were removed before these submissions.
