@@ -60,33 +60,33 @@ COMMON_ARGS=(
 case "${DIAG_MODE}" in
   pilot)
     MODE_ARGS=(
-      task_limit=16
-      steps=20000
-      demo_steps=200
-      batch_size=256
-      buffer_size=1000000
-      checkpoint_freq=5000
-      replay_checkpoint_freq=10000
+      task_limit="${DIAG_TASK_LIMIT:-16}"
+      steps="${DIAG_STEPS:-20000}"
+      demo_steps="${DIAG_DEMO_STEPS:-200}"
+      batch_size="${DIAG_BATCH_SIZE:-256}"
+      buffer_size="${DIAG_BUFFER_SIZE:-1000000}"
+      checkpoint_freq="${DIAG_CHECKPOINT_FREQ:-5000}"
+      replay_checkpoint_freq="${DIAG_REPLAY_CHECKPOINT_FREQ:-10000}"
     )
     ;;
   reduced)
     MODE_ARGS=(
-      steps=100000
-      demo_steps=1000
-      batch_size=256
-      buffer_size=1000000
-      checkpoint_freq=10000
-      replay_checkpoint_freq=25000
+      steps="${DIAG_STEPS:-100000}"
+      demo_steps="${DIAG_DEMO_STEPS:-1000}"
+      batch_size="${DIAG_BATCH_SIZE:-256}"
+      buffer_size="${DIAG_BUFFER_SIZE:-1000000}"
+      checkpoint_freq="${DIAG_CHECKPOINT_FREQ:-10000}"
+      replay_checkpoint_freq="${DIAG_REPLAY_CHECKPOINT_FREQ:-25000}"
     )
     ;;
   full)
     MODE_ARGS=(
-      steps=100000
-      demo_steps=1000
-      batch_size=1024
-      buffer_size=10000000
-      checkpoint_freq=10000
-      replay_checkpoint_freq=25000
+      steps="${DIAG_STEPS:-100000}"
+      demo_steps="${DIAG_DEMO_STEPS:-1000}"
+      batch_size="${DIAG_BATCH_SIZE:-1024}"
+      buffer_size="${DIAG_BUFFER_SIZE:-10000000}"
+      checkpoint_freq="${DIAG_CHECKPOINT_FREQ:-10000}"
+      replay_checkpoint_freq="${DIAG_REPLAY_CHECKPOINT_FREQ:-25000}"
     )
     ;;
   *)
