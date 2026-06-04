@@ -104,3 +104,19 @@ Submitted on 2026-06-04 after commit `c310a49`:
 | `9428345` | Single-GPU reduced-memory repair | `gpu-h200`, 1x H200 | `0-3` | Uses `DIAG_MODE=reduced`, `DIAG_STEPS=500000` for lower-memory coverage. |
 
 Stale pending job `9417062_3` was canceled before these submissions because it was submitted with the older Slurm script snapshot.
+
+## Weight Cleanup
+
+On 2026-06-04, checkpoint directories for smoke, pilot, and previously failed runs were removed to keep storage organized:
+
+- Removed `models/` under `pipeline_smoke_*` and `pipeline_resume_smoke_*`.
+- Removed `models/` under `single-pilot_*`.
+- Removed failed single-GPU continuation weights for `single-full_wm-mlp_pi-gaussian_seed-1`, `single-full_wm-flow_pi-gaussian_seed-1`, and `single-full_wm-mlp_pi-flow_seed-1`.
+- Removed failed formal pretrain/checkpoint weights for `wm-flow_pi-gaussian_seed-1` and `wm-mlp_pi-flow_seed-1`.
+
+Metrics, W&B records, and Slurm logs were kept. Remaining local model directories after cleanup:
+
+- `outputs/logs/soup/1/single-full_wm-flow_pi-flow_seed-1/models`
+- `outputs/logs/soup/1/wm-mlp_pi-gaussian_seed-1/models`
+
+The cleanup reduced `outputs/logs` from approximately 108 GB to 19 GB.
