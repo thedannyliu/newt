@@ -21,6 +21,7 @@ class Config:
 
 	# environment
 	task: str = "soup"										# "soup" for multitask, see tdmpc2/common/__init__.py for task list
+	task_subset_file: Optional[str] = None					# optional JSON list of task names for soup subsets
 	task_start: int = 0									# optional start offset for soup task subsets
 	task_limit: Optional[int] = None						# optional prefix subset of tasks for smoke tests
 	obs: str = "state"										# observation type, one of ["state", "rgb"]
@@ -176,6 +177,16 @@ def parse_cfg(cfg):
 
 	# Set defaults
 	cfg.tasks = TASK_SET.get(cfg.task, [cfg.task] * cfg.num_envs)
+	if cfg.task_subset_file is not None:
+		assert cfg.task == "soup", "task_subset_file is only supported for soup task subsets"
+		subset_fp = Path(cfg.task_subset_file)
+		if not subset_fp.is_absolute():
+			subset_fp = Path(hydra.utils.get_original_cwd()) / subset_fp
+		assert subset_fp.exists(), f"task_subset_file not found: {subset_fp}"
+		with open(subset_fp, "r") as f:
+			cfg.tasks = json.load(f)
+		assert isinstance(cfg.tasks, list) and all(isinstance(task, str) for task in cfg.tasks), \
+			"task_subset_file must contain a JSON list of task names"
 	if cfg.task_start:
 		assert cfg.task == "soup", "task_start is only supported for soup task subsets"
 		assert cfg.task_start >= 0, "task_start must be non-negative"
