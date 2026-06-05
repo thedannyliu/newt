@@ -79,3 +79,14 @@ Job `9432574` still failed with `EGL_BAD_ALLOC`, showing that even a single full
 - Updated `scripts/slurm_flow_single_gpu_eval.sbatch` to use `0-39%4`, mapping 4 cells x 10 chunks of 20 tasks.
 
 Chunked eval preserves the full task coverage after aggregation while avoiding one job constructing all 200 environments at once.
+
+Chunked eval submissions:
+
+| Job | Cell(s) | Array | Status at submission |
+| --- | --- | --- | --- |
+| `9433194` | `mlp + gaussian` | `0` | Pending |
+| `9433197` | `mlp + gaussian` | `1-9%2` | Pending |
+| `9433199` | `flow + gaussian` | `10-19%2` | Pending |
+| `9433200` | `mlp + flow` | `20-29%2` | Pending |
+
+The `flow + flow` chunks (`30-39`) were not submitted yet because `QOSMaxSubmitJobPerUserLimit` was reached. Submit them after existing jobs leave the pending/running set.
