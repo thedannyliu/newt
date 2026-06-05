@@ -262,3 +262,19 @@ Additional `mlp + flow` missing chunks were submitted:
 | `9448059` | `7` | Pending |
 | `9448068` | `8` | Pending |
 | `9448069` | `9` | Pending |
+
+Status checked after completion on 2026-06-05:
+
+- `9448058_23`, `9448060_25`, `9448061_26`, `9448059_27`, `9448068_28`, and `9448069_29` all completed with exit code `0`.
+- The single-GPU checkpoint eval is now complete for all four 2x2 cells.
+
+Final checkpoint eval coverage:
+
+| Cell | Completed chunks | Covered tasks | Avg score | Chunk-mean weighted score |
+| --- | ---: | ---: | ---: | ---: |
+| `mlp + gaussian` | 10/10 | 200/200 | 0.04799 | 0.04863 |
+| `flow + gaussian` | 10/10 | 200/200 | 0.03889 | 0.03512 |
+| `mlp + flow` | 10/10 | 200/200 | 0.02379 | 0.02136 |
+| `flow + flow` | 10/10 | 200/200 | 0.03150 | 0.04638 |
+
+The new 40-task jobs `9450979` and `9450994` are still pending on `gpu-h200` with reason `Priority`; no stderr files have been produced for them yet.

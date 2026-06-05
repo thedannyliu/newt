@@ -164,3 +164,14 @@ Additional `mlp + flow` missing chunks were submitted after slots freed:
 | `9448059` | `7` |
 | `9448068` | `8` |
 | `9448069` | `9` |
+
+Final single-GPU checkpoint eval status for this screening:
+
+| Cell | Completed chunks | Covered tasks | Avg score | Chunk-mean weighted score |
+| --- | ---: | ---: | ---: | ---: |
+| `mlp + gaussian` | 10/10 | 200/200 | 0.04799 | 0.04863 |
+| `flow + gaussian` | 10/10 | 200/200 | 0.03889 | 0.03512 |
+| `mlp + flow` | 10/10 | 200/200 | 0.02379 | 0.02136 |
+| `flow + flow` | 10/10 | 200/200 | 0.03150 | 0.04638 |
+
+Takeaway: the original `mlp + gaussian` baseline remains the strongest cell in the low-pretrain, 0.4M-0.5M single-GPU screening. The completed `mlp + flow` eval confirms that the flow-policy cell is not only slower but also lower-scoring in this early regime.
