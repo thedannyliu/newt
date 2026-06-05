@@ -211,3 +211,20 @@ Replacement chunked checkpoint eval submissions:
 | `9436038` | `flow + flow` | `30-39%2` | Pending |
 
 The `mlp + flow` chunks (`20-29`) were blocked by `QOSMaxSubmitJobPerUserLimit` during resubmission and should be submitted once the pending/running job count drops.
+
+Status checked on 2026-06-05:
+
+- Repair is working for completed chunks: `9436034_0`, `9436034_1`, `9436034_2`, and `9436034_3` completed successfully and produced W&B/local eval metrics.
+- `9436034_4-9` remains pending with `JobArrayTaskLimit` even though chunks `0-3` are complete. `scontrol show job 9436034_4` reports no dependency and no application-level error; this appears to be Slurm array throttle/bookkeeping rather than a Newt failure.
+- `9436035_10-19`, `9436038_30-39`, and formal job `9431231_0-3` remain pending on `gpu-h200`.
+
+Additional `mlp + flow` chunks submitted individually:
+
+| Job | Chunk | Status at submission |
+| --- | --- | --- |
+| `9438508` | `20` | Pending |
+| `9438513` | `21` | Pending |
+| `9438512` | `22` | Pending |
+| `9438514` | `24` | Pending |
+
+Chunks `23` and `25-29` are still blocked by `QOSMaxSubmitJobPerUserLimit`.

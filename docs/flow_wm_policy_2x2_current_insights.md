@@ -108,3 +108,26 @@ Replacement chunked eval submissions after repair:
 | `9436038` | `flow + flow` | `30-39%2` | Pending |
 
 The `mlp + flow` chunks (`20-29`) were not resubmitted yet because `QOSMaxSubmitJobPerUserLimit` was reached during submission. Submit them after one of the pending arrays starts or completes.
+
+Status checked on 2026-06-05:
+
+| Job/chunk | Cell | Outcome |
+| --- | --- | --- |
+| `9436034_0` | `mlp + gaussian`, tasks `0-19` | Completed. `eval/avg_score=0.10286`, `eval/avg_score_weighted=0.10286`. |
+| `9436034_1` | `mlp + gaussian`, tasks `20-39` | Completed. `eval/avg_score=0.04651`, `eval/avg_score_weighted=0.02219`. |
+| `9436034_2` | `mlp + gaussian`, tasks `40-59` | Completed. `eval/avg_score=0.05000`, `eval/avg_score_weighted=0.05000`. |
+| `9436034_3` | `mlp + gaussian`, tasks `60-79` | Completed. `eval/avg_score=0.00000`, `eval/avg_score_weighted=0.00000`. |
+| `9436034_4-9` | `mlp + gaussian`, remaining chunks | Pending with `JobArrayTaskLimit`; no stderr has been produced yet. |
+| `9436035_10-19` | `flow + gaussian` | Pending. |
+| `9436038_30-39` | `flow + flow` | Pending. |
+
+Additional `mlp + flow` chunks were submitted individually after the array submission remained blocked by `QOSMaxSubmitJobPerUserLimit`:
+
+| Job | Chunk | Status at submission |
+| --- | --- | --- |
+| `9438508` | `20` | Pending |
+| `9438513` | `21` | Pending |
+| `9438512` | `22` | Pending |
+| `9438514` | `24` | Pending |
+
+Chunks `23` and `25-29` are still blocked by the QOS submit limit and should be retried when queued jobs drain.
