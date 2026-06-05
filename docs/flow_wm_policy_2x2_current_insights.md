@@ -137,3 +137,30 @@ Follow-up status on 2026-06-05:
 - `9436034_4-9` was repaired from stale `JobArrayTaskLimit` by raising the array throttle to `%8`; the remaining baseline chunks now wait on `Priority`.
 - Formal `9431231_0-3`, `flow + gaussian` chunks `10-19`, and `flow + flow` chunks `30-39` remain pending.
 - Additional `mlp + flow` chunk submissions for `23`, `25`, and `26` were retried and still blocked by `QOSMaxSubmitJobPerUserLimit`.
+
+Checkpoint eval status checked later on 2026-06-05:
+
+| Cell | Completed chunks | Covered tasks | Chunk-mean avg score | Chunk-mean weighted score |
+| --- | ---: | ---: | ---: | ---: |
+| `mlp + gaussian` | 10/10 | 200/200 | 0.04799 | 0.04863 |
+| `flow + gaussian` | 10/10 | 200/200 | 0.03889 | 0.03512 |
+| `mlp + flow` | 4/10 | 80/200 | 0.02312 | 0.01425 |
+| `flow + flow` | 10/10 | 200/200 | 0.03150 | 0.04638 |
+
+Interpretation from completed checkpoint eval chunks:
+
+- For single-GPU full-like checkpoints, baseline `mlp + gaussian` currently has the best full-coverage avg score.
+- `flow + gaussian` is lower than baseline on both avg score and weighted score.
+- `flow + flow` has lower unweighted avg score than baseline but similar weighted score, likely because chunk/domain weighting emphasizes different task groups.
+- `mlp + flow` is still partial, so do not compare it as a final cell yet.
+
+Additional `mlp + flow` missing chunks were submitted after slots freed:
+
+| Job | Chunk |
+| --- | --- |
+| `9448058` | `3` |
+| `9448060` | `5` |
+| `9448061` | `6` |
+| `9448059` | `7` |
+| `9448068` | `8` |
+| `9448069` | `9` |

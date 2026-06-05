@@ -236,3 +236,29 @@ Status checked on 2026-06-05 later:
 - Eval arrays `9436035_10-19` and `9436038_30-39` remain pending with `Priority`.
 - `9436034_4-9` was still pending with `JobArrayTaskLimit` even though chunks `0-3` had completed. This was repaired operationally with `scontrol update JobId=9436034 ArrayTaskThrottle=8`; the remaining chunks now show pending reason `Priority`.
 - Additional attempts to submit `mlp + flow` chunks `23`, `25`, and `26` were still blocked by `QOSMaxSubmitJobPerUserLimit`.
+
+Status checked again on 2026-06-05:
+
+- `9436034_4-9`, `9436035_10-19`, `9436038_30-39`, and `9438508_20`, `9438512_22`, `9438513_21`, `9438514_24` all completed with exit code `0`.
+- No eval stderr indicates an application failure; stderr files contain expected W&B/Gym warnings and run summaries.
+- Formal 8-GPU job `9431231_0-3` is still pending on `gpu-h200` with reason `Resources`.
+
+Completed checkpoint eval coverage:
+
+| Cell | Completed chunks | Covered tasks |
+| --- | ---: | ---: |
+| `mlp + gaussian` | 10/10 | 200/200 |
+| `flow + gaussian` | 10/10 | 200/200 |
+| `mlp + flow` | 4/10 | 80/200 |
+| `flow + flow` | 10/10 | 200/200 |
+
+Additional `mlp + flow` missing chunks were submitted:
+
+| Job | Chunk | Status at submission |
+| --- | --- | --- |
+| `9448058` | `3` | Pending |
+| `9448060` | `5` | Pending |
+| `9448061` | `6` | Pending |
+| `9448059` | `7` | Pending |
+| `9448068` | `8` | Pending |
+| `9448069` | `9` | Pending |
