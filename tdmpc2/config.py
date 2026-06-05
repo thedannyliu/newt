@@ -184,9 +184,10 @@ def parse_cfg(cfg):
 			subset_fp = Path(hydra.utils.get_original_cwd()) / subset_fp
 		assert subset_fp.exists(), f"task_subset_file not found: {subset_fp}"
 		with open(subset_fp, "r") as f:
-			cfg.tasks = json.load(f)
-		assert isinstance(cfg.tasks, list) and all(isinstance(task, str) for task in cfg.tasks), \
+			subset_tasks = json.load(f)
+		assert isinstance(subset_tasks, list) and all(isinstance(task, str) for task in subset_tasks), \
 			"task_subset_file must contain a JSON list of task names"
+		cfg.tasks = list(subset_tasks)
 	if cfg.task_start:
 		assert cfg.task == "soup", "task_start is only supported for soup task subsets"
 		assert cfg.task_start >= 0, "task_start must be non-negative"

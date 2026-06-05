@@ -109,3 +109,25 @@ The original H200 submissions were still pending, so backup jobs were submitted 
 | `9456355` | 40-task 5M high-pretrain 2x2 | `gpu-l40s`, 1x L40S | `l40s` | Uses `BATCH_SIZE=512` and 4 CPUs to fit L40S policy limits. |
 
 All backup jobs were pending with reason `Priority` immediately after submission.
+
+## Repair Log
+
+2026-06-05 subset launch repair:
+
+- Failed jobs: H200 `9450979`, `9450994`; L40S `9456355`, `9456356`.
+- Symptom: every array task exited during startup with `AssertionError: task_subset_file must contain a JSON list of task names`.
+- Root cause: `parse_cfg` assigned the loaded JSON directly to `cfg.tasks`, then checked `isinstance(cfg.tasks, list)`. Hydra/OmegaConf converted the assigned value, so the assertion checked the converted config object instead of the plain JSON list.
+- Fix: validate `subset_tasks` immediately after `json.load`, then assign `cfg.tasks = list(subset_tasks)`.
+- Validation: `python -m py_compile tdmpc2/config.py`; local `parse_cfg` smoke confirmed `40` unique tasks from `configs/task_subsets/mmbench_balanced_40.json`.
+- Cleanup: no subset training output directories or checkpoints were created by the failed startup jobs; only Slurm stderr records remain under `outputs/slurm/` for diagnosis.
+
+Replacement submissions after the fix:
+
+| Job | Purpose | Partition/GPU | Run tag | Notes |
+| --- | --- | --- | --- | --- |
+| `9464590` | 40-task `flow_steps=1/2/4` ablation | `gpu-h200`, 1x H200 | `h200-r1` | Replacement for failed H200 `9450979`. |
+| `9464589` | 40-task 5M high-pretrain 2x2 | `gpu-h200`, 1x H200 | `h200-r1` | Replacement for failed H200 `9450994`. |
+| `9464593` | 40-task `flow_steps=1/2/4` ablation | `gpu-l40s`, 1x L40S | `l40s-r1` | Replacement for failed L40S `9456356`, uses `BATCH_SIZE=512`. |
+| `9464591` | 40-task 5M high-pretrain 2x2 | `gpu-l40s`, 1x L40S | `l40s-r1` | Replacement for failed L40S `9456355`, uses `BATCH_SIZE=512`. |
+
+Current queue note: H100 `9456326`/`9456329` and A100 `9456330`/`9456357` backups were still pending when the code fix landed, so they should pick up the repaired repo code at runtime.
