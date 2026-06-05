@@ -199,3 +199,15 @@ Fixes applied:
 - `scripts/slurm_flow_single_gpu_eval.sbatch` now passes `env_mode=sync` for checkpoint eval chunks to avoid async worker CUDA fork failures.
 
 Pending old-script chunk arrays `9433197`, `9433199`, and `9433200` should be canceled and replaced after committing these fixes. Formal replacement job `9431231` remains pending on `gpu-h200` with reason `Priority`.
+
+Old-script pending chunk arrays `9433197`, `9433199`, and `9433200` were canceled after the repair commit.
+
+Replacement chunked checkpoint eval submissions:
+
+| Job | Cell(s) | Array | Status at submission |
+| --- | --- | --- | --- |
+| `9436034` | `mlp + gaussian` | `0-9%2` | Pending |
+| `9436035` | `flow + gaussian` | `10-19%2` | Pending |
+| `9436038` | `flow + flow` | `30-39%2` | Pending |
+
+The `mlp + flow` chunks (`20-29`) were blocked by `QOSMaxSubmitJobPerUserLimit` during resubmission and should be submitted once the pending/running job count drops.
