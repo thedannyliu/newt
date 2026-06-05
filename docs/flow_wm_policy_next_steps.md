@@ -131,3 +131,27 @@ Replacement submissions after the fix:
 | `9464591` | 40-task 5M high-pretrain 2x2 | `gpu-l40s`, 1x L40S | `l40s-r1` | Replacement for failed L40S `9456355`, uses `BATCH_SIZE=512`. |
 
 Current queue note: H100 `9456326`/`9456329` and A100 `9456330`/`9456357` backups were still pending when the code fix landed, so they should pick up the repaired repo code at runtime.
+
+2026-06-05 follow-up status:
+
+- The subset parsing failure did not recur after commit `bd0f318`.
+- H200 flow-step replacements `9464590_[0-2]` completed successfully.
+- H100 flow-step backups `9456326_0` and `9456326_1` completed successfully; `9456326_2` was still running at the status check.
+- H200 5M subset jobs `9464589_1`, `9464589_2`, and `9464589_3` were running normally.
+- H200 5M subset job `9464589_0` was preempted by `embers` after about 2 hours, not failed by code. It produced `1_000_000_full.pt`, plus later non-full checkpoints through `1_500_000.pt`.
+- Repair action: resubmitted H200 array `0` as job `9476097` with the same `RUN_TAG=h200-r1`, W&B run id, and output directory. The job will resume from `outputs/logs/soup/1/subset40-5m-h200-r1_wm-mlp_pi-gaussian_seed-1/models/1_000_000_full.pt`.
+- To reduce future preemption loss, the resubmission overrides `REPLAY_CHECKPOINT_FREQ=500000`.
+
+Observed early metrics at this status check:
+
+| Run | Step | Score metric | SPS | Action time |
+| --- | ---: | ---: | ---: | ---: |
+| `subset40-5m-h200-r1_wm-mlp_pi-gaussian_seed-1` | 1.6M | `avg_score=0.2734` | 224.84 | eval row |
+| `subset40-5m-h200-r1_wm-mlp_pi-flow_seed-1` | 1.08M | `episode_score=0.2724` | 173.42 | 0.0869 |
+| `subset40-5m-h200-r1_wm-flow_pi-gaussian_seed-1` | 0.96M | `episode_score=0.1035` | 154.68 | 0.1049 |
+| `subset40-5m-h200-r1_wm-flow_pi-flow_seed-1` | 0.72M | `episode_score=0.0734` | 120.00 | 0.1379 |
+| `subset40-flowsteps1-h200-r1_wm-flow_pi-gaussian_seed-1` | 0.48M | `episode_score=0.0675` | 185.42 | 0.0589 |
+| `subset40-flowsteps2-h200-r1_wm-flow_pi-gaussian_seed-1` | 0.48M | `episode_score=0.0677` | 167.75 | 0.0743 |
+| `subset40-flowsteps4-h200-r1_wm-flow_pi-gaussian_seed-1` | 0.48M | `episode_score=0.0839` | 143.80 | 0.1043 |
+
+Interpretation is still preliminary because the 5M runs are incomplete and some rows are train episode metrics rather than full eval rows. The timing trend is already consistent: more flow steps increase action time and reduce SPS.
