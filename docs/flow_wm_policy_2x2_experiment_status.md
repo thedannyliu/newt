@@ -228,3 +228,11 @@ Additional `mlp + flow` chunks submitted individually:
 | `9438514` | `24` | Pending |
 
 Chunks `23` and `25-29` are still blocked by `QOSMaxSubmitJobPerUserLimit`.
+
+Status checked on 2026-06-05 later:
+
+- No new eval or formal stderr logs were produced after the previous check.
+- Formal job `9431231_0-3` remains pending on `gpu-h200` with `Priority,Resources`.
+- Eval arrays `9436035_10-19` and `9436038_30-39` remain pending with `Priority`.
+- `9436034_4-9` was still pending with `JobArrayTaskLimit` even though chunks `0-3` had completed. This was repaired operationally with `scontrol update JobId=9436034 ArrayTaskThrottle=8`; the remaining chunks now show pending reason `Priority`.
+- Additional attempts to submit `mlp + flow` chunks `23`, `25`, and `26` were still blocked by `QOSMaxSubmitJobPerUserLimit`.

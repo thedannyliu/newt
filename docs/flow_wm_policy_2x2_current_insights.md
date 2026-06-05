@@ -131,3 +131,9 @@ Additional `mlp + flow` chunks were submitted individually after the array submi
 | `9438514` | `24` | Pending |
 
 Chunks `23` and `25-29` are still blocked by the QOS submit limit and should be retried when queued jobs drain.
+
+Follow-up status on 2026-06-05:
+
+- `9436034_4-9` was repaired from stale `JobArrayTaskLimit` by raising the array throttle to `%8`; the remaining baseline chunks now wait on `Priority`.
+- Formal `9431231_0-3`, `flow + gaussian` chunks `10-19`, and `flow + flow` chunks `30-39` remain pending.
+- Additional `mlp + flow` chunk submissions for `23`, `25`, and `26` were retried and still blocked by `QOSMaxSubmitJobPerUserLimit`.
