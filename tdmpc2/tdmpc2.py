@@ -98,7 +98,11 @@ class TDMPC2(torch.nn.Module):
 			state_dict[prefix+"_task_emb.weight"] = self.model._task_emb.weight
 			state_dict[prefix+"_action_masks"] = self.model._action_masks
 
-		state_dict = api_model_conversion(self.model.state_dict(), state_dict)
+		state_dict = api_model_conversion(
+			self.model.state_dict(),
+			state_dict,
+			first_dim_offset=getattr(self.cfg, "task_start", 0),
+		)
 		self.model.load_state_dict(state_dict)
 		if load_training_state and "model" in checkpoint:
 			if "optim" in checkpoint:

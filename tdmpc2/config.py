@@ -21,6 +21,7 @@ class Config:
 
 	# environment
 	task: str = "soup"										# "soup" for multitask, see tdmpc2/common/__init__.py for task list
+	task_start: int = 0									# optional start offset for soup task subsets
 	task_limit: Optional[int] = None						# optional prefix subset of tasks for smoke tests
 	obs: str = "state"										# observation type, one of ["state", "rgb"]
 	num_envs: int = 10										# number of parallel environments, overridden if task is "soup"
@@ -175,6 +176,10 @@ def parse_cfg(cfg):
 
 	# Set defaults
 	cfg.tasks = TASK_SET.get(cfg.task, [cfg.task] * cfg.num_envs)
+	if cfg.task_start:
+		assert cfg.task == "soup", "task_start is only supported for soup task subsets"
+		assert cfg.task_start >= 0, "task_start must be non-negative"
+		cfg.tasks = cfg.tasks[cfg.task_start:]
 	if cfg.task_limit is not None:
 		assert cfg.task == "soup", "task_limit is only supported for soup smoke tests"
 		assert cfg.task_limit > 0, "task_limit must be positive"

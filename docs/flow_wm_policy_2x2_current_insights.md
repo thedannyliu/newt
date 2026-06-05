@@ -71,3 +71,11 @@ Replacement serialized eval job:
 | Job | Purpose | Partition/GPU | Array | Notes |
 | --- | --- | --- | --- | --- |
 | `9432574` | Serialized single-GPU post-checkpoint eval | `gpu-h200`, 1x H200 | `0-3%1` | Full 200-task eval for each cell, one array task active at a time. |
+
+Job `9432574` still failed with `EGL_BAD_ALLOC`, showing that even a single full 200-task eval job can over-allocate EGL/OpenGL contexts during environment construction. The eval script now runs task chunks instead of the full 200-task suite at once:
+
+- Added `task_start` to the config so a soup run can evaluate a contiguous task slice.
+- Updated checkpoint loading to slice `_task_emb.weight` and `_action_masks` by `task_start` when loading a full 200-task checkpoint into a smaller task-slice model.
+- Updated `scripts/slurm_flow_single_gpu_eval.sbatch` to use `0-39%4`, mapping 4 cells x 10 chunks of 20 tasks.
+
+Chunked eval preserves the full task coverage after aggregation while avoiding one job constructing all 200 environments at once.

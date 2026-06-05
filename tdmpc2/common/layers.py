@@ -170,7 +170,7 @@ def enc(cfg, out={}):
 	return nn.ModuleDict(out)
 
 
-def api_model_conversion(target_state_dict, source_state_dict):
+def api_model_conversion(target_state_dict, source_state_dict, first_dim_offset=0):
 	"""
 	Attempts to automatically convert a model checkpoint (e.g. add/remove DDP 'module.' prefixes).
 	"""
@@ -194,12 +194,22 @@ def api_model_conversion(target_state_dict, source_state_dict):
 
 	if '_action_masks' in target_state_dict and '_action_masks' in source_state_dict and \
 			source_state_dict['_action_masks'].shape != target_state_dict['_action_masks'].shape:
-		# repeat first dimension to match
-		source_state_dict['_action_masks'] = source_state_dict['_action_masks'].repeat(
-			target_state_dict['_action_masks'].shape[0] // source_state_dict['_action_masks'].shape[0], 1)
-		if '_task_emb.weight' in source_state_dict:
-			source_state_dict['_task_emb.weight'] = source_state_dict['_task_emb.weight'].repeat(
-				target_state_dict['_action_masks'].shape[0] // source_state_dict['_task_emb.weight'].shape[0], 1)
+		target_n = target_state_dict['_action_masks'].shape[0]
+		source_n = source_state_dict['_action_masks'].shape[0]
+		if source_n > target_n:
+			start = first_dim_offset
+			end = start + target_n
+			assert end <= source_n, f'Cannot slice source action masks [{start}:{end}] from {source_n} rows.'
+			source_state_dict['_action_masks'] = source_state_dict['_action_masks'][start:end]
+			if '_task_emb.weight' in source_state_dict:
+				source_state_dict['_task_emb.weight'] = source_state_dict['_task_emb.weight'][start:end]
+		else:
+			# repeat first dimension to match
+			source_state_dict['_action_masks'] = source_state_dict['_action_masks'].repeat(
+				target_n // source_n, 1)
+			if '_task_emb.weight' in source_state_dict:
+				source_state_dict['_task_emb.weight'] = source_state_dict['_task_emb.weight'].repeat(
+					target_n // source_state_dict['_task_emb.weight'].shape[0], 1)
 		
 	if '_task_emb.weight' in source_state_dict and not '_task_emb.weight' in target_state_dict:
 		# delete task embedding from source state dict

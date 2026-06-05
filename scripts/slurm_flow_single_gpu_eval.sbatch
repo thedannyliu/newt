@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-single-eval
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-3%1
+#SBATCH --array=0-39%4
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -19,6 +19,9 @@ PYTHON_BIN="${PYTHON_BIN:-/storage/project/r-agarg35-0/eliu354/envs/newt_officia
 DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mmbench_demos}"
 SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-single-gpu-h200-eval}"
+TASK_CHUNK_SIZE="${TASK_CHUNK_SIZE:-20}"
+NUM_TASKS="${NUM_TASKS:-200}"
+NUM_CHUNKS=$(( (NUM_TASKS + TASK_CHUNK_SIZE - 1) / TASK_CHUNK_SIZE ))
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 RUNTIME_ROOT="${RUNTIME_ROOT:-outputs/runtime/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}}"
@@ -41,9 +44,20 @@ CELLS=(
   "mlp flow"
   "flow flow"
 )
-read -r DYNAMICS POLICY <<< "${CELLS[${SLURM_ARRAY_TASK_ID}]}"
+CELL_ID=$(( SLURM_ARRAY_TASK_ID / NUM_CHUNKS ))
+CHUNK_ID=$(( SLURM_ARRAY_TASK_ID % NUM_CHUNKS ))
+if (( CELL_ID >= ${#CELLS[@]} )); then
+  echo "Invalid CELL_ID=${CELL_ID}; NUM_CHUNKS=${NUM_CHUNKS}; SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID}" >&2
+  exit 3
+fi
+TASK_START=$(( CHUNK_ID * TASK_CHUNK_SIZE ))
+TASK_LIMIT="${TASK_CHUNK_SIZE}"
+if (( TASK_START + TASK_LIMIT > NUM_TASKS )); then
+  TASK_LIMIT=$(( NUM_TASKS - TASK_START ))
+fi
+read -r DYNAMICS POLICY <<< "${CELLS[${CELL_ID}]}"
 SOURCE_NAME="single-full_wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
-NAME="eval-${SOURCE_NAME}"
+NAME="$(printf 'eval-%s_chunk-%02d' "${SOURCE_NAME}" "${CHUNK_ID}")"
 MODEL_DIR="outputs/logs/soup/${SEED}/${SOURCE_NAME}/models"
 CHECKPOINT="$(find "${MODEL_DIR}" -maxdepth 1 -name '*_full.pt' -print | sort -V | tail -n 1)"
 if [[ -z "${CHECKPOINT}" ]]; then
@@ -53,6 +67,8 @@ fi
 
 "${PYTHON_BIN}" tdmpc2/eval_checkpoint.py \
   task=soup \
+  task_start="${TASK_START}" \
+  task_limit="${TASK_LIMIT}" \
   model_size=L \
   obs=state \
   steps=1 \
