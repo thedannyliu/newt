@@ -78,3 +78,18 @@ Implement these only after the 40-task high-pretrain results show a reason to co
 - Trajectory flow: model a short latent rollout segment for planning, higher research value but larger implementation risk.
 
 Do not prioritize full flow policy variants yet; current evidence shows policy flow is the largest action-time overhead and has no score advantage in the early screening.
+
+## Submissions
+
+Submitted on 2026-06-05:
+
+| Job | Purpose | Array | Partition/GPU | Notes |
+| --- | --- | --- | --- | --- |
+| `9450979` | 40-task `flow_steps=1/2/4` ablation | `0-2` | `gpu-h200`, 1x H200 | 500k online steps, 50k demo pretrain, Gaussian policy. |
+| `9450994` | 40-task 5M high-pretrain 2x2 | `0-3` | `gpu-h200`, 1x H200 | 5M online steps, 50k demo pretrain, original 2x2 cells. |
+
+Operational notes:
+
+- The first submission attempt used 12 CPUs per H200 and was rejected by the cluster CPU:GPU ratio policy. Scripts now request 8 CPUs per H200.
+- The first 5M submission attempt requested 10 hours and was rejected by the `embers` walltime limit. The 5M script now requests 8 hours and relies on full checkpoints for continuation if needed.
+- Both accepted jobs were pending with reason `Priority` at submission time.
