@@ -94,3 +94,18 @@ Operational notes:
 - The first 5M submission attempt requested 10 hours and was rejected by the `embers` walltime limit. The 5M script now requests 8 hours and relies on full checkpoints for continuation if needed.
 - Both accepted jobs were pending with reason `Priority` at submission time.
 - Status check on 2026-06-05: both `9450979` and `9450994` remain pending with reason `Priority`; no stderr files have been produced yet.
+
+Backup submissions on 2026-06-05:
+
+The original H200 submissions were still pending, so backup jobs were submitted across H100, A100, and L40S to get any viable GPU running first. Scripts now support `RUN_TAG` so backup jobs write separate output directories and W&B run IDs.
+
+| Job | Purpose | Partition/GPU | Run tag | Notes |
+| --- | --- | --- | --- | --- |
+| `9456326` | 40-task `flow_steps=1/2/4` ablation | `gpu-h100`, 1x H100 | `h100` | Same settings as H200. |
+| `9456330` | 40-task `flow_steps=1/2/4` ablation | `gpu-a100`, 1x A100 | `a100` | Same settings as H200. |
+| `9456356` | 40-task `flow_steps=1/2/4` ablation | `gpu-l40s`, 1x L40S | `l40s` | Uses `BATCH_SIZE=512` and 4 CPUs to fit L40S policy limits. |
+| `9456329` | 40-task 5M high-pretrain 2x2 | `gpu-h100`, 1x H100 | `h100` | Same settings as H200. |
+| `9456357` | 40-task 5M high-pretrain 2x2 | `gpu-a100`, 1x A100 | `a100` | Same settings as H200. |
+| `9456355` | 40-task 5M high-pretrain 2x2 | `gpu-l40s`, 1x L40S | `l40s` | Uses `BATCH_SIZE=512` and 4 CPUs to fit L40S policy limits. |
+
+All backup jobs were pending with reason `Priority` immediately after submission.
