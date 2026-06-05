@@ -184,3 +184,18 @@ Reduced debug checkpoints were removed after completion. Remaining model directo
 - `outputs/logs/soup/1/single-full_wm-mlp_pi-flow_seed-1/models`
 - `outputs/logs/soup/1/single-full_wm-mlp_pi-gaussian_seed-1/models`
 - `outputs/logs/soup/1/wm-mlp_pi-gaussian_seed-1/models`
+
+## Checkpoint Eval Repair
+
+On 2026-06-04, chunked checkpoint eval arrays `9433194` and `9433197` began failing:
+
+- Chunks `0-3` failed because `tdmpc2/eval_checkpoint.py` loaded full checkpoint trainer state, including replay, while eval-only `Trainer` is constructed with `buffer=None`.
+- ManiSkill-heavy chunks `4-5` additionally failed while creating async vector-env workers with `RuntimeError: Cannot re-initialize CUDA in forked subprocess`, followed by worker `BrokenPipeError`.
+
+Fixes applied:
+
+- `tdmpc2/eval_checkpoint.py` now performs eval-only restore: model weights, running scale, and trainer counters only. It does not restore optimizer, scheduler, replay, or RNG state.
+- CUDA setup and seeding now happen after environment construction in `eval_checkpoint.py`.
+- `scripts/slurm_flow_single_gpu_eval.sbatch` now passes `env_mode=sync` for checkpoint eval chunks to avoid async worker CUDA fork failures.
+
+Pending old-script chunk arrays `9433197`, `9433199`, and `9433200` should be canceled and replaced after committing these fixes. Formal replacement job `9431231` remains pending on `gpu-h200` with reason `Priority`.

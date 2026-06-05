@@ -90,3 +90,11 @@ Chunked eval submissions:
 | `9433200` | `mlp + flow` | `20-29%2` | Pending |
 
 The `flow + flow` chunks (`30-39`) were not submitted yet because `QOSMaxSubmitJobPerUserLimit` was reached. Submit them after existing jobs leave the pending/running set.
+
+Chunked eval repair on 2026-06-04:
+
+| Job | Failed chunks | Root cause | Fix |
+| --- | --- | --- | --- |
+| `9433194`, `9433197` | `0-5` | Eval-only trainer had no replay buffer, but full checkpoint restore attempted to load replay state. ManiSkill chunks also hit CUDA reinitialization inside forked async env workers. | `eval_checkpoint.py` now restores only model weights, running scale, and trainer step. `scripts/slurm_flow_single_gpu_eval.sbatch` now sets `env_mode=sync` for checkpoint eval. |
+
+Pending old-script eval arrays `9433197`, `9433199`, and `9433200` should be canceled before resubmission because Slurm array tasks keep the script snapshot from submission time.

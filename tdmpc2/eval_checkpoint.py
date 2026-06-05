@@ -32,10 +32,10 @@ def launch(cfg: Config):
 	cfg = parse_cfg(cfg)
 	cfg.rank = 0
 	cfg.world_size = 1
-	torch.cuda.set_device(0)
-	set_seed(cfg.seed)
 
 	env = make_env(cfg)
+	torch.cuda.set_device(0)
+	set_seed(cfg.seed)
 	model = WorldModel(cfg).to("cuda:0")
 	agent = TDMPC2(model, cfg)
 	logger = Logger(cfg)
@@ -46,9 +46,13 @@ def launch(cfg: Config):
 		buffer=None,
 		logger=logger,
 	)
-	checkpoint_state = trainer.agent.load(cfg.checkpoint)
-	if isinstance(checkpoint_state, dict) and "extra" in checkpoint_state:
-		trainer.load_state_dict(checkpoint_state["extra"])
+	checkpoint_state = trainer.agent.load(cfg.checkpoint, load_training_state=False)
+	if isinstance(checkpoint_state, dict):
+		if "scale" in checkpoint_state:
+			trainer.agent.scale.load_state_dict(checkpoint_state["scale"])
+		extra_state = checkpoint_state.get("extra", {})
+		if isinstance(extra_state, dict) and "trainer" in extra_state:
+			trainer.load_state_dict({"trainer": extra_state["trainer"]})
 	print(colored(f"Loaded checkpoint from {cfg.checkpoint}.", "blue", attrs=["bold"]))
 
 	eval_metrics = trainer.eval()

@@ -78,6 +78,7 @@ fi
   save_agent=false \
   save_replay=false \
   eval_episodes="${EVAL_EPISODES:-1}" \
+  env_mode=sync \
   compile=false \
   dynamics_arch="${DYNAMICS}" \
   policy_arch="${POLICY}" \
