@@ -20,6 +20,7 @@ DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mm
 TASK_SUBSET_FILE="${TASK_SUBSET_FILE:-configs/task_subsets/mmbench_balanced_40.json}"
 SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-subset40-flowsteps-500k}"
+RUN_TAG="${RUN_TAG:-}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 
@@ -39,7 +40,7 @@ fi
 
 FLOW_STEPS_LIST=(1 2 4)
 FLOW_STEPS="${FLOW_STEPS_LIST[${SLURM_ARRAY_TASK_ID}]}"
-NAME="subset40-flowsteps${FLOW_STEPS}_wm-flow_pi-gaussian_seed-${SEED}"
+NAME="subset40-flowsteps${FLOW_STEPS}${RUN_TAG:+-${RUN_TAG}}_wm-flow_pi-gaussian_seed-${SEED}"
 
 MODEL_DIR="outputs/logs/soup/${SEED}/${NAME}/models"
 CHECKPOINT_ARGS=()

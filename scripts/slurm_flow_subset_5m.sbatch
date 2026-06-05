@@ -20,6 +20,7 @@ DATA_DIR="${DATA_DIR:-/storage/project/r-agarg35-0/eliu354/external_data/newt/mm
 TASK_SUBSET_FILE="${TASK_SUBSET_FILE:-configs/task_subsets/mmbench_balanced_40.json}"
 SEED="${SEED:-1}"
 WANDB_GROUP="${WANDB_GROUP:-subset40-5m-highpretrain}"
+RUN_TAG="${RUN_TAG:-}"
 export WANDB_PROJECT="${WANDB_PROJECT:-newt-flow-2x2}"
 export MS_SKIP_ASSET_DOWNLOAD_PROMPT=1
 
@@ -44,7 +45,7 @@ CELLS=(
   "flow flow"
 )
 read -r DYNAMICS POLICY <<< "${CELLS[${SLURM_ARRAY_TASK_ID}]}"
-NAME="subset40-5m_wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
+NAME="subset40-5m${RUN_TAG:+-${RUN_TAG}}_wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"
 
 MODEL_DIR="outputs/logs/soup/${SEED}/${NAME}/models"
 CHECKPOINT_ARGS=()
