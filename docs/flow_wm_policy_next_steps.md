@@ -188,3 +188,12 @@ Validation before submission:
 - `python -m py_compile tdmpc2/common/flow.py tdmpc2/common/world_model.py tdmpc2/config.py`
 - `bash -n scripts/slurm_flow_wm_variants_5m.sbatch`
 - CPU smoke instantiated `mlp`, `flow`, `endpoint_flow`, and `residual_flow` world models and verified `next()` plus `dynamics_loss()` shape/finite-loss behavior on small tensors.
+
+Variant submissions:
+
+| Job | Purpose | Partition/GPU | Run tag | Notes |
+| --- | --- | --- | --- | --- |
+| `9477139` | `endpoint_flow`/`residual_flow` WM variants | `gpu-h200`, 1x H200 | `h200-r1` | Primary submission. |
+| `9477141` | `endpoint_flow`/`residual_flow` WM variants | `gpu-h100`, 1x H100 | `h100` | Backup submission with the same 5M setting. |
+| `9477140` | `endpoint_flow`/`residual_flow` WM variants | `gpu-a100`, 1x A100 | `a100` | Backup submission with the same 5M setting. |
+| `9477142` | `endpoint_flow`/`residual_flow` WM variants | `gpu-l40s`, 1x L40S | `l40s` | Backup submission with `BATCH_SIZE=512` to fit L40S capacity. |
