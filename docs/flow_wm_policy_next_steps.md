@@ -197,3 +197,12 @@ Variant submissions:
 | `9477141` | `endpoint_flow`/`residual_flow` WM variants | `gpu-h100`, 1x H100 | `h100` | Backup submission with the same 5M setting. |
 | `9477140` | `endpoint_flow`/`residual_flow` WM variants | `gpu-a100`, 1x A100 | `a100` | Backup submission with the same 5M setting. |
 | `9477142` | `endpoint_flow`/`residual_flow` WM variants | `gpu-l40s`, 1x L40S | `l40s` | Backup submission with `BATCH_SIZE=512` to fit L40S capacity. |
+
+2026-06-06 resume repair:
+
+- Several `embers` runs were preempted or hit the 8-hour walltime. This is expected under `embers`; affected runs keep local checkpoints and W&B run IDs.
+- True failure: H200 `flow + flow` repair job `9476424_3` failed after loading `750_000.pt` because the checkpoint step was not aligned to the vectorized episode update boundary:
+  - error: `Step 790000 does not match expected episode-boundary offset 0 for update frequency 40000`.
+- Root cause: non-full checkpoints do not preserve partial environment/episode tensor state. After reset, the expected boundary offset should be `checkpoint_step % update_freq`, not the old stored offset.
+- Fix: `Trainer.load_state_dict` now recomputes `_episode_boundary_offset = self._step % self._update_freq` on resume.
+- Validation: `python -m py_compile tdmpc2/trainer.py`; direct load-state smoke confirmed `step=750000` gives offset `30000` for update frequency `40000`.

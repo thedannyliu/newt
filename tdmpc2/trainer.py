@@ -93,10 +93,10 @@ class Trainer():
 		self._update_tokens = trainer_state.get("update_tokens", self._update_tokens)
 		self._last_checkpoint_step = trainer_state.get("last_checkpoint_step", self._last_checkpoint_step)
 		self._last_replay_checkpoint_step = trainer_state.get("last_replay_checkpoint_step", self._last_replay_checkpoint_step)
-		self._episode_boundary_offset = trainer_state.get(
-			"episode_boundary_offset",
-			self._step % self._update_freq,
-		)
+		# Checkpoints do not store the partially collected episode tensor or env state.
+		# After reset, the next full vectorized episode boundary is offset by the
+		# checkpoint step, even when an older checkpoint stored offset 0.
+		self._episode_boundary_offset = self._step % self._update_freq
 		rng_state = state.get("rng", {})
 		if "python" in rng_state:
 			random.setstate(rng_state["python"])
