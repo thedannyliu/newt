@@ -54,6 +54,12 @@ if [[ -d "${MODEL_DIR}" ]]; then
   if [[ -n "${LATEST_CHECKPOINT}" ]]; then
     CHECKPOINT_ARGS=(checkpoint="${LATEST_CHECKPOINT}")
     echo "Resuming ${NAME} from ${LATEST_CHECKPOINT}"
+  else
+    LATEST_CHECKPOINT="$(find "${MODEL_DIR}" -maxdepth 1 -name '*.pt' -print | sort -V | tail -n 1)"
+    if [[ -n "${LATEST_CHECKPOINT}" ]]; then
+      CHECKPOINT_ARGS=(checkpoint="${LATEST_CHECKPOINT}")
+      echo "Resuming ${NAME} from non-full checkpoint ${LATEST_CHECKPOINT}; online replay state is not included."
+    fi
   fi
 fi
 

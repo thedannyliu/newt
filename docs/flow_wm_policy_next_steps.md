@@ -155,3 +155,13 @@ Observed early metrics at this status check:
 | `subset40-flowsteps4-h200-r1_wm-flow_pi-gaussian_seed-1` | 0.48M | `episode_score=0.0839` | 143.80 | 0.1043 |
 
 Interpretation is still preliminary because the 5M runs are incomplete and some rows are train episode metrics rather than full eval rows. The timing trend is already consistent: more flow steps increase action time and reduce SPS.
+
+2026-06-05 H200 preemption repair:
+
+- H200 5M subset jobs `9464589_1`, `9464589_2`, and `9464589_3` were also preempted by `embers` after about 2 hours.
+- Available checkpoints:
+  - `wm-flow_pi-gaussian`: `1_000_000_full.pt`
+  - `wm-mlp_pi-flow`: `1_000_000_full.pt`
+  - `wm-flow_pi-flow`: latest checkpoint `750_000.pt`, but no full replay checkpoint yet
+- Script fix: `scripts/slurm_flow_subset_5m.sbatch` now falls back to the latest non-full `*.pt` when no `*_full.pt` exists. Non-full checkpoints still restore model, optimizer, scheduler, RNG, and trainer step; they do not restore online replay.
+- Repair action: resubmitted H200 array `1-3` as job `9476424_[1-3]` with the same `RUN_TAG=h200-r1`, W&B run IDs, and output directories. `REPLAY_CHECKPOINT_FREQ=500000` remains enabled for the repair submissions.
