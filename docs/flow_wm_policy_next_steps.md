@@ -206,3 +206,8 @@ Variant submissions:
 - Root cause: non-full checkpoints do not preserve partial environment/episode tensor state. After reset, the expected boundary offset should be `checkpoint_step % update_freq`, not the old stored offset.
 - Fix: `Trainer.load_state_dict` now recomputes `_episode_boundary_offset = self._step % self._update_freq` on resume.
 - Validation: `python -m py_compile tdmpc2/trainer.py`; direct load-state smoke confirmed `step=750000` gives offset `30000` for update frequency `40000`.
+- Repair submissions after the fix:
+  - `9490091_[0-3]`: H200 40-task 5M 2x2 resume with `RUN_TAG=h200-r1`.
+  - `9490093_[1-3]`: H100 40-task 5M 2x2 resume with `RUN_TAG=h100`; array `0` already reached 5M.
+  - `9490092_[0-2]`: L40S 40-task 5M 2x2 resume with `RUN_TAG=l40s-r1`; array `3` was still running at the repair check.
+  - `9490094_[1]`: H200 residual-flow WM variant resume with `RUN_TAG=h200-r1`; endpoint-flow H200 already had a 5M full checkpoint.
