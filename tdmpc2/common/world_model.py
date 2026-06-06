@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from common import layers, math, init
-from common.flow import ConditionalFlow, FlowPolicy
+from common.flow import ConditionalFlow, EndpointFlowDynamics, FlowPolicy, ResidualFlowDynamics
 from tensordict import TensorDict
 
 
@@ -37,6 +37,18 @@ class WorldModel(nn.Module):
 		self._encoder = layers.enc(cfg)
 		if cfg.dynamics_arch == "flow":
 			self._dynamics = ConditionalFlow(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		elif cfg.dynamics_arch == "endpoint_flow":
+			self._dynamics = EndpointFlowDynamics(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		elif cfg.dynamics_arch == "residual_flow":
+			self._dynamics = ResidualFlowDynamics(
 				cfg,
 				cfg.latent_dim,
 				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
@@ -161,6 +173,12 @@ class WorldModel(nn.Module):
 				steps=self.cfg.flow_steps,
 			)
 			return layers.SimNorm(self.cfg)(z + residual)
+		if self.cfg.dynamics_arch == "endpoint_flow":
+			residual = self._dynamics(cond)
+			return layers.SimNorm(self.cfg)(z + residual)
+		if self.cfg.dynamics_arch == "residual_flow":
+			base, residual = self._dynamics(cond, steps=self.cfg.flow_steps)
+			return layers.SimNorm(self.cfg)(base + residual)
 		return self._dynamics(cond)
 
 	def dynamics_loss(self, z, a, target_z, task):
@@ -172,6 +190,10 @@ class WorldModel(nn.Module):
 		cond = torch.cat([z_task, a], dim=-1)
 		if self.cfg.dynamics_arch == "flow":
 			return self._dynamics.loss((target_z - z).detach(), cond).mean()
+		if self.cfg.dynamics_arch == "endpoint_flow":
+			return self._dynamics.loss((target_z - z).detach(), cond).mean()
+		if self.cfg.dynamics_arch == "residual_flow":
+			return self._dynamics.loss(target_z.detach(), cond).mean()
 		pred_z = self._dynamics(cond)
 		return torch.nn.functional.mse_loss(pred_z, target_z)
 

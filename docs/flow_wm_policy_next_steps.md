@@ -165,3 +165,26 @@ Interpretation is still preliminary because the 5M runs are incomplete and some 
   - `wm-flow_pi-flow`: latest checkpoint `750_000.pt`, but no full replay checkpoint yet
 - Script fix: `scripts/slurm_flow_subset_5m.sbatch` now falls back to the latest non-full `*.pt` when no `*_full.pt` exists. Non-full checkpoints still restore model, optimizer, scheduler, RNG, and trainer step; they do not restore online replay.
 - Repair action: resubmitted H200 array `1-3` as job `9476424_[1-3]` with the same `RUN_TAG=h200-r1`, W&B run IDs, and output directories. `REPLAY_CHECKPOINT_FREQ=500000` remains enabled for the repair submissions.
+
+## WM Variant Runs
+
+2026-06-05 implementation:
+
+- Added `dynamics_arch=endpoint_flow`.
+  - Predicts the latent residual endpoint in one deterministic network call.
+  - Avoids Euler sampling during dynamics rollout, so it should be cheaper than increasing `flow_steps`.
+- Added `dynamics_arch=residual_flow`.
+  - Keeps an MLP next-latent path and adds a flow residual correction.
+  - Trains the MLP path with next-latent MSE and the flow path on the remaining residual.
+  - This is the lower-risk flow variant because it preserves the stable MLP dynamics baseline.
+- Added `scripts/slurm_flow_wm_variants_5m.sbatch`.
+  - Array `0`: `endpoint_flow + gaussian`.
+  - Array `1`: `residual_flow + gaussian`.
+  - Same 40-task high-pretrain setting as the 5M subset runs: `demo_steps=50000`, `steps=5000000`, `model_size=L`, `obs=state`, checkpointing and W&B resume enabled.
+  - Uses distinct run names under `subset40-5m-wmvar...` so these jobs do not collide with the existing 2x2 runs.
+
+Validation before submission:
+
+- `python -m py_compile tdmpc2/common/flow.py tdmpc2/common/world_model.py tdmpc2/config.py`
+- `bash -n scripts/slurm_flow_wm_variants_5m.sbatch`
+- CPU smoke instantiated `mlp`, `flow`, `endpoint_flow`, and `residual_flow` world models and verified `next()` plus `dynamics_loss()` shape/finite-loss behavior on small tensors.

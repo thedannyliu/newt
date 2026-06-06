@@ -90,7 +90,7 @@ class Config:
 	task_dim: int = 512										# task embedding dim, 512 assumes CLIP embeddings
 	num_q: int = 5											# number of Q-functions in ensemble, overridden by model_size
 	simnorm_dim: int = 8									# number of dims per simplex in simplicial embedding layer
-	dynamics_arch: str = "mlp"								# world model dynamics architecture, one of ["mlp", "flow"]
+	dynamics_arch: str = "mlp"								# world model dynamics architecture, one of ["mlp", "flow", "endpoint_flow", "residual_flow"]
 	policy_arch: str = "gaussian"							# policy prior architecture, one of ["gaussian", "flow"]
 	flow_steps: int = 4										# Euler integration steps for flow dynamics / policy
 	flow_t_dim: int = 64									# sinusoidal time embedding dim for flow modules
@@ -167,8 +167,8 @@ def parse_cfg(cfg):
 		for k, v in MODEL_SIZE[cfg.model_size].items():
 			cfg[k] = v
 
-	assert cfg.dynamics_arch in {"mlp", "flow"}, \
-		f'Invalid dynamics_arch {cfg.dynamics_arch}. Must be one of ["mlp", "flow"]'
+	assert cfg.dynamics_arch in {"mlp", "flow", "endpoint_flow", "residual_flow"}, \
+		f'Invalid dynamics_arch {cfg.dynamics_arch}. Must be one of ["mlp", "flow", "endpoint_flow", "residual_flow"]'
 	assert cfg.policy_arch in {"gaussian", "flow"}, \
 		f'Invalid policy_arch {cfg.policy_arch}. Must be one of ["gaussian", "flow"]'
 	assert cfg.flow_t_dim % 2 == 0, "flow_t_dim must be even"

@@ -75,6 +75,64 @@ class ConditionalFlow(nn.Module):
 		return x
 
 
+class EndpointFlowDynamics(nn.Module):
+	"""
+	Deterministic endpoint residual predictor.
+	This keeps the flow-style time-conditioned interface but predicts the
+	latent residual in one network call instead of Euler sampling.
+	"""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__()
+		self.sample_dim = sample_dim
+		self.t_embed = TimeEmbedding(cfg.flow_t_dim)
+		self.net = layers.mlp(
+			sample_dim + cond_dim + cfg.flow_t_dim,
+			cfg.flow_hidden_layers * [cfg.mlp_dim],
+			sample_dim,
+		)
+
+	def forward(self, cond):
+		base = torch.zeros(*cond.shape[:-1], self.sample_dim, device=cond.device, dtype=cond.dtype)
+		t = torch.ones(*cond.shape[:-1], 1, device=cond.device, dtype=cond.dtype)
+		t_emb = self.t_embed(t)
+		return self.net(torch.cat([base, cond, t_emb], dim=-1))
+
+	def loss(self, target, cond):
+		return F.mse_loss(self.forward(cond), target, reduction='none').mean(-1)
+
+
+class ResidualFlowDynamics(nn.Module):
+	"""
+	MLP dynamics with a flow residual correction.
+	The MLP path learns the stable baseline next latent; the flow path models
+	the remaining residual without replacing the baseline dynamics.
+	"""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__()
+		self.cfg = cfg
+		self.base = layers.mlp(
+			cond_dim,
+			2 * [cfg.mlp_dim],
+			sample_dim,
+			act=layers.SimNorm(cfg),
+		)
+		self.flow = ConditionalFlow(cfg, sample_dim, cond_dim)
+
+	def forward(self, cond, steps: int = 4):
+		base = self.base(cond)
+		residual = self.flow.sample(cond, base=torch.zeros_like(base), steps=steps)
+		return base, residual
+
+	def loss(self, target_z, cond):
+		base = self.base(cond)
+		base_loss = F.mse_loss(base, target_z, reduction='none').mean(-1)
+		residual_target = (target_z - base).detach()
+		flow_loss = self.flow.loss(residual_target, cond)
+		return base_loss + flow_loss
+
+
 class FlowPolicy(nn.Module):
 	"""Conditional action flow used as Newt's policy prior."""
 
