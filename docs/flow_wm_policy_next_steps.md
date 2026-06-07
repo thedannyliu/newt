@@ -211,3 +211,16 @@ Variant submissions:
   - `9490093_[1-3]`: H100 40-task 5M 2x2 resume with `RUN_TAG=h100`; array `0` already reached 5M.
   - `9490092_[0-2]`: L40S 40-task 5M 2x2 resume with `RUN_TAG=l40s-r1`; array `3` was still running at the repair check.
   - `9490094_[1]`: H200 residual-flow WM variant resume with `RUN_TAG=h200-r1`; endpoint-flow H200 already had a 5M full checkpoint.
+
+2026-06-06 second resume repair:
+
+- Follow-up failures showed two additional resume issues:
+  - `sort -V | tail -n 1` selected `500_000_full.pt` after higher-step full checkpoints in some directories, causing W&B step regressions and stale resumes.
+  - Episode-boundary alignment can shift after restoring from a checkpoint because the partial env/episode tensor is not stored. The trainer should resync instead of asserting.
+- Fixes:
+  - `scripts/slurm_flow_subset_5m.sbatch` and `scripts/slurm_flow_wm_variants_5m.sbatch` now select checkpoints by parsing the numeric step from the filename.
+  - `Trainer.train` now resyncs `_episode_boundary_offset` to the current offset when a boundary mismatch is observed after resume.
+- Validation:
+  - `python -m py_compile tdmpc2/trainer.py`
+  - `bash -n scripts/slurm_flow_subset_5m.sbatch scripts/slurm_flow_wm_variants_5m.sbatch`
+  - Checkpoint selector smoke confirmed H200 residual WM now selects `4_000_000_full.pt` instead of `500_000_full.pt`.

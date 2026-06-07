@@ -45,13 +45,22 @@ NAME="subset40-5m-wmvar${RUN_TAG:+-${RUN_TAG}}_wm-${DYNAMICS}_pi-${POLICY}_seed-
 
 MODEL_DIR="outputs/logs/soup/${SEED}/${NAME}/models"
 CHECKPOINT_ARGS=()
+latest_checkpoint() {
+  local pattern="$1"
+  find "${MODEL_DIR}" -maxdepth 1 -name "${pattern}" -print | while read -r fp; do
+    base="$(basename "${fp}" .pt)"
+    base="${base%_full}"
+    step="${base//_/}"
+    printf '%012d %s\n' "${step}" "${fp}"
+  done | sort -n | tail -n 1 | cut -d' ' -f2-
+}
 if [[ -d "${MODEL_DIR}" ]]; then
-  LATEST_CHECKPOINT="$(find "${MODEL_DIR}" -maxdepth 1 -name '*_full.pt' -print | sort -V | tail -n 1)"
+  LATEST_CHECKPOINT="$(latest_checkpoint '*_full.pt')"
   if [[ -n "${LATEST_CHECKPOINT}" ]]; then
     CHECKPOINT_ARGS=(checkpoint="${LATEST_CHECKPOINT}")
     echo "Resuming ${NAME} from ${LATEST_CHECKPOINT}"
   else
-    LATEST_CHECKPOINT="$(find "${MODEL_DIR}" -maxdepth 1 -name '*.pt' -print | sort -V | tail -n 1)"
+    LATEST_CHECKPOINT="$(latest_checkpoint '*.pt')"
     if [[ -n "${LATEST_CHECKPOINT}" ]]; then
       CHECKPOINT_ARGS=(checkpoint="${LATEST_CHECKPOINT}")
       echo "Resuming ${NAME} from non-full checkpoint ${LATEST_CHECKPOINT}; online replay state is not included."

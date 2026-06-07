@@ -359,8 +359,18 @@ class Trainer():
 				
 				# Log and reset metrics if enough data is collected
 				if max_ep_len >= self.cfg.episode_length:
-					assert self._step % self._update_freq == self._episode_boundary_offset, \
-						f'Step {self._step} does not match expected episode-boundary offset {self._episode_boundary_offset} for update frequency {self._update_freq}.'
+					current_offset = self._step % self._update_freq
+					if current_offset != self._episode_boundary_offset:
+						if self.cfg.rank == 0:
+							print(
+								colored(
+									f'Resyncing episode-boundary offset from {self._episode_boundary_offset} '
+									f'to {current_offset} at step {self._step}.',
+									'yellow',
+									attrs=['bold'],
+								)
+							)
+						self._episode_boundary_offset = current_offset
 					self._ep_idx += self._eps_per_update_freq
 					for key in ['episode_reward', 'episode_success', 'episode_score', 'episode_length', 'episode_terminated']:
 						train_metrics[key] = torch.tensor(train_metrics[key], dtype=torch.float32).nanmean().item()
