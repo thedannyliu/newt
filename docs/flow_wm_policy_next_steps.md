@@ -259,3 +259,33 @@ Latest local progress snapshot:
 | H200 `endpoint_flow + gaussian` | 5.00M train | 0.2815 | 224.25 | 0.0579 | Finished earlier; below residual and MLP baseline. |
 
 Interim interpretation remains unchanged: MLP WM is still the strongest baseline, while `residual_flow` is the most promising flow WM variant. Pure rectified-flow WM remains much weaker at comparable steps.
+
+2026-06-07 04:00 EDT monitoring and repair:
+
+- Slurm status:
+  - Running before repair: A100 2x2 `9521260_[1-3]`, A100 WM variants `9521300_[0-1]`, L40S 2x2 `9521262_[1,3]`, and L40S WM residual `9521301_1`.
+  - Completed: H100 2x2 `9521261_3`, H100 WM endpoint `9521299_0`, H200 `mlp + flow` `9521259_2`, L40S `mlp + flow` `9521262_2`, and L40S WM endpoint `9521301_0`.
+  - Preempted by `embers`: H200 2x2 `9521259_[0,1,3]`, A100 `mlp + gaussian` `9521260_0`, H200 WM residual `9521297_1`, and H100 WM residual `9521299_1`.
+- Error scan: no code-level failure was found in the active/recent `952*` logs. Recent stderr contained W&B monotonic-step warnings and explicit Slurm preemption notices only.
+- Checkpoint status:
+  - Already at 5M full checkpoint: H100 2x2 all cells, H200 `mlp + gaussian` and `mlp + flow`, L40S `mlp + gaussian` and `mlp + flow`, H200 WM endpoint/residual, H100 WM endpoint, and L40S WM endpoint.
+  - Still incomplete and needing resume: H200 `flow + gaussian` at 4.0M full, H200 `flow + flow` at 2.0M, A100 `mlp + gaussian` at 3.0M full, and H100 WM residual at 4.0M full.
+- Repair submissions:
+  - `9536281_[1,3]`: H200 40-task 5M 2x2 resume for `flow + gaussian` and `flow + flow`, `RUN_TAG=h200-r1`.
+  - `9536282_0`: A100 40-task 5M 2x2 resume for `mlp + gaussian`, `RUN_TAG=a100`.
+  - `9536283_1`: H100 WM variant resume for `residual_flow + gaussian`, `RUN_TAG=h100`.
+- Submission note: the first retry attempt failed because the shell had no default Slurm account. Existing running jobs used `Account=gts-agarg35`, so the successful repair submissions explicitly used `--account=gts-agarg35` with `--qos=embers` inherited from the scripts.
+- Verification after repair: `9536281_[1,3]`, `9536282_0`, and `9536283_1` were all running immediately after submission.
+
+Latest local progress snapshot:
+
+| Run | Latest local row | Score | SPS | Action time | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H200 `mlp + gaussian` | 5.00M train | 0.3651 | 783.76 | 0.0537 | 5M full checkpoint. |
+| H200 `mlp + flow` | 5.00M train | 0.3817 | 1894.46 | 0.0862 | 5M full checkpoint. |
+| H200 `flow + gaussian` | 4.24M train | 0.0957 | 538.29 | 0.1042 | Resubmitted as `9536281_1`. |
+| H200 `flow + flow` | 2.04M train | 0.1184 | 198.14 | 0.1376 | Resubmitted as `9536281_3`. |
+| H200 `residual_flow + gaussian` | 5.00M train | 0.3075 | 739.05 | 0.1165 | 5M full checkpoint. |
+| H200 `endpoint_flow + gaussian` | 5.00M train | 0.2815 | 224.25 | 0.0579 | 5M full checkpoint. |
+
+Interim result: the strong ordering is stable so far. MLP WM remains clearly ahead; residual-flow WM is the best flow WM variant; endpoint-flow is cheaper than multi-step pure flow but still below residual and MLP; pure rectified-flow WM is still weak.
