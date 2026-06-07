@@ -289,3 +289,29 @@ Latest local progress snapshot:
 | H200 `endpoint_flow + gaussian` | 5.00M train | 0.2815 | 224.25 | 0.0579 | 5M full checkpoint. |
 
 Interim result: the strong ordering is stable so far. MLP WM remains clearly ahead; residual-flow WM is the best flow WM variant; endpoint-flow is cheaper than multi-step pure flow but still below residual and MLP; pure rectified-flow WM is still weak.
+
+2026-06-07 05:03 EDT monitoring update:
+
+- Queue status: all active training jobs were running; no new Slurm `FAILED`, CUDA OOM, assertion, or Python traceback was observed.
+- Active jobs:
+  - `9536281_[1,3]`: H200 resume for `flow + gaussian` and `flow + flow`, running for about 1 hour.
+  - `9536282_0`: A100 resume for `mlp + gaussian`, running for about 1 hour.
+  - `9536283_1`: H100 resume for WM `residual_flow + gaussian`, running for about 1 hour.
+  - `9521260_[1-3]`: A100 2x2 cells still running, now near 6-7 hours of walltime.
+  - `9521300_[0-1]`: A100 WM endpoint/residual variants still running, near 6 hours.
+  - `9521262_[1,3]` and `9521301_1`: L40S 2x2/WM-residual jobs still running, near 5-7 hours.
+- Error scan: current stderr contains W&B monotonic-step warnings only. These continue to be non-fatal; local metrics and checkpoints are advancing.
+- No repair submission was made in this pass. Several active jobs are close to the 8-hour limit, but they are still writing to their intended output directories, so duplicate submissions with the same run names would risk file races. If they hit walltime/preemption before 5M, resume from their newest checkpoint in the next pass.
+
+Latest local progress snapshot:
+
+| Run | Latest local row | Score | SPS | Action time | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H200 `flow + gaussian` | 4.52M train | 0.1147 | 1280.95 | 0.1047 | Running under `9536281_1`; latest checkpoint 4.5M full. |
+| H200 `flow + flow` | 2.20M train | 0.1529 | 634.01 | 0.1378 | Running under `9536281_3`; still far from 5M. |
+| A100 `mlp + gaussian` | 3.44M train | 0.2884 | 973.19 | 0.1405 | Running under `9536282_0`. |
+| A100 `mlp + flow` | 4.44M train | 0.3792 | 181.43 | 0.2266 | Running; likely needs resume if walltime hits first. |
+| A100 WM `endpoint_flow + gaussian` | 4.92M train | 0.2581 | 229.41 | 0.1221 | Running, close to 5M. |
+| A100 WM `residual_flow + gaussian` | 3.80M train | 0.2779 | 175.77 | 0.2535 | Running. |
+| H100 WM `residual_flow + gaussian` | 4.40M eval | 0.2378 | 1194.09 | n/a | Running under `9536283_1`. |
+| L40S WM `residual_flow + gaussian` | 3.20M eval | 0.2158 | 175.57 | n/a | Running, latest checkpoint 3.0M full. |
