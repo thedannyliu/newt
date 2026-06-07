@@ -315,3 +315,31 @@ Latest local progress snapshot:
 | A100 WM `residual_flow + gaussian` | 3.80M train | 0.2779 | 175.77 | 0.2535 | Running. |
 | H100 WM `residual_flow + gaussian` | 4.40M eval | 0.2378 | 1194.09 | n/a | Running under `9536283_1`. |
 | L40S WM `residual_flow + gaussian` | 3.20M eval | 0.2158 | 175.57 | n/a | Running, latest checkpoint 3.0M full. |
+
+2026-06-07 05:53 EDT monitoring and eval push:
+
+- Active training status:
+  - No new code-level failures were observed. Recent stderr still shows W&B monotonic-step warnings only.
+  - H200 `flow + gaussian` completed successfully under `9536281_1` and wrote `5_000_000_full.pt`.
+  - H200 `flow + flow` is still running under `9536281_3`, latest local row around 2.56M.
+  - A100 `mlp + flow`, `flow + gaussian`, `flow + flow`, and A100 WM residual are still running; several are close to the 8-hour walltime and may need resume if preempted or timed out.
+  - A100 WM endpoint completed and wrote `5_000_000_full.pt`.
+- Added `scripts/slurm_flow_subset_5m_eval.sbatch` for formal 40-task subset evaluation.
+  - It evaluates only `5_000_000_full.pt` checkpoints.
+  - It uses the same `configs/task_subsets/mmbench_balanced_40.json` task list as training.
+  - Eval logs use separate `eval-...` experiment names, so they do not race with training directories.
+- Eval submissions:
+  - `9541180_[0-11%4]`: H100 eval array for completed H100 2x2, completed H200 MLP cells, completed H200 WM variants, completed L40S MLP cells, and completed endpoint WM checkpoints.
+  - `9541207_12`: H100 eval for newly completed H200 `flow + gaussian`.
+- Verification after eval submission: `9541180_0-3` and `9541207_12` were running; `9541180_4-11` were pending only because of the `%4` array throttle.
+
+Latest local progress snapshot:
+
+| Run | Latest local row | Score | SPS | Action time | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H200 `flow + gaussian` | 5.00M train | 0.136 | n/a | 0.1047 | Completed 5M full; eval submitted as `9541207_12`. |
+| H200 `flow + flow` | 2.56M train | 0.1329 | 403.69 | 0.1378 | Still running under `9536281_3`. |
+| A100 `mlp + flow` | 4.76M train | 0.3753 | 173.35 | 0.2261 | Still running, close to 5M. |
+| A100 WM `endpoint_flow + gaussian` | 5.00M train | 0.2554 | 227.29 | 0.1220 | Completed 5M full; eval submitted in `9541180`. |
+| A100 WM `residual_flow + gaussian` | 4.00M eval | 0.1966 | 165.55 | n/a | Still running. |
+| H100 WM `residual_flow + gaussian` | 4.72M train | 0.2729 | 741.87 | 0.1376 | Still running under `9536283_1`. |
