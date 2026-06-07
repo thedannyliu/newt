@@ -233,3 +233,29 @@ Variant submissions:
   - `9521299_[0-1]`: H100 WM variant resumes with `RUN_TAG=h100`.
   - `9521300_[0-1]`: A100 WM variant resumes with `RUN_TAG=a100`.
   - `9521301_[0-1]`: L40S WM variant resumes with `RUN_TAG=l40s`.
+
+2026-06-06 22:45 EDT monitoring update:
+
+- Queue status: all repaired `952*` submissions were either running or pending; no new failed Slurm state was observed.
+- Running jobs:
+  - H200 2x2: `9521259_[0-3]`
+  - H200 residual WM variant: `9521297_1`
+  - H100 `flow + flow`: `9521261_3`
+  - A100 2x2: `9521260_[0-2]`
+  - L40S 2x2: `9521262_[1-2]`
+- Pending backup jobs: A100 `9521260_3`, A100 WM variants `9521300_[0-1]`, H100 WM variants `9521299_[0-1]`, L40S `9521262_3`, and L40S WM variants `9521301_[0-1]`.
+- Error scan: recent stderr showed W&B monotonic-step warnings only; no `Traceback`, `AssertionError`, CUDA OOM, preemption, or time-limit crash in the active `952*` logs.
+- W&B note: warnings such as `Tried to log to step X that is less than the current step Y` are expected for some resumed runs where the online W&B history is one step ahead of the local checkpoint. Local `metrics.jsonl` continues updating, and W&B should resume accepting rows once the run surpasses the recorded online step.
+
+Latest local progress snapshot:
+
+| Run | Latest local row | Score | SPS | Action time | Notes |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H200 `mlp + flow` | 4.84M train | 0.3732 | 2630.85 | 0.0863 | Near 5M, strongest active H200 row. |
+| H200 `mlp + gaussian` | 3.96M train | 0.3329 | 2080.06 | 0.0536 | Healthy resume. |
+| H200 `flow + gaussian` | 3.28M train | 0.0779 | 1861.40 | 0.1043 | Still weak. |
+| H200 `flow + flow` | 0.92M train | 0.0795 | 588.84 | 0.1374 | Healthy but far behind after prior resume trouble. |
+| H200 `residual_flow + gaussian` | 4.24M train | 0.3116 | 2533.59 | 0.1166 | Best flow WM variant so far. |
+| H200 `endpoint_flow + gaussian` | 5.00M train | 0.2815 | 224.25 | 0.0579 | Finished earlier; below residual and MLP baseline. |
+
+Interim interpretation remains unchanged: MLP WM is still the strongest baseline, while `residual_flow` is the most promising flow WM variant. Pure rectified-flow WM remains much weaker at comparable steps.
