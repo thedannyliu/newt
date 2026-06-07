@@ -224,3 +224,12 @@ Variant submissions:
   - `python -m py_compile tdmpc2/trainer.py`
   - `bash -n scripts/slurm_flow_subset_5m.sbatch scripts/slurm_flow_wm_variants_5m.sbatch`
   - Checkpoint selector smoke confirmed H200 residual WM now selects `4_000_000_full.pt` instead of `500_000_full.pt`.
+- Repair submissions after the second fix:
+  - `9521259_[0-3]`: H200 40-task 5M 2x2 resume with `RUN_TAG=h200-r1`.
+  - `9521261_[3]`: H100 40-task 5M `flow + flow` resume with `RUN_TAG=h100`.
+  - `9521260_[0-3]`: A100 40-task 5M 2x2 resume with `RUN_TAG=a100`.
+  - `9521262_[1-3]`: L40S 40-task 5M 2x2 resume with `RUN_TAG=l40s-r1`.
+  - `9521297_[1]`: H200 residual-flow WM variant resume with `RUN_TAG=h200-r1`.
+  - `9521299_[0-1]`: H100 WM variant resumes with `RUN_TAG=h100`.
+  - `9521300_[0-1]`: A100 WM variant resumes with `RUN_TAG=a100`.
+  - `9521301_[0-1]`: L40S WM variant resumes with `RUN_TAG=l40s`.
