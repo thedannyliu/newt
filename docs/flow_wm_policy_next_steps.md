@@ -580,3 +580,39 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 - H200 `9652347_3` and `9652347_4` are both running; both dependent eval jobs remain pending on `Dependency`.
 - Latest additional checkpoint movement: L40S `shortcut_residual_flow_wm + gaussian` advanced to `2.25M`.
 - Final error scan for this monitoring pass remained clean.
+
+2026-06-08 19:51 EDT monitoring and repair:
+
+- Queue status:
+  - Still running: H200 `9652347_[3-4]`, H100 `9652348_[2-4]`, A100 `9652349_[3-4]`, L40S `9652350_[3-4]`.
+  - Preempted by `embers`: A100 `9652349_2` (`residual_mean_flow_wm`), L40S `9652350_2` (`residual_mean_flow_wm`), and L40S `9652366_3` (`flow + flow`).
+  - Stderr for the preempted jobs shows Slurm preemption only; no Python traceback, assertion, CUDA OOM, missing data, or W&B fatal error was found.
+- Updated checkpoint progress at repair time:
+
+| Run | Latest checkpoint | Latest full checkpoint | Status |
+| --- | ---: | ---: | --- |
+| H100 `ot_cfm_residual_wm + gaussian` | 4.75M | 4.50M | running; closest new-flow WM to 5M |
+| H100 `residual_mean_flow_wm + gaussian` | 4.50M | 4.50M | running |
+| H100 `shortcut_residual_flow_wm + gaussian` | 4.25M | 4.00M | running |
+| A100 `residual_mean_flow_wm + gaussian` | 4.25M | 4.00M | preempted, resubmitted |
+| A100 `shortcut_residual_flow_wm + gaussian` | 3.00M | 3.00M | running |
+| A100 `ot_cfm_residual_wm + gaussian` | 1.50M | 1.50M | running |
+| H200 `shortcut_residual_flow_wm + gaussian` | 2.50M | 2.50M | running |
+| H200 `ot_cfm_residual_wm + gaussian` | 3.00M | 3.00M | running |
+| L40S `residual_mean_flow_wm + gaussian` | 4.00M | 4.00M | preempted, resubmitted |
+| L40S `shortcut_residual_flow_wm + gaussian` | 2.50M | 2.50M | running |
+| L40S `ot_cfm_residual_wm + gaussian` | 3.00M | 3.00M | running |
+| L40S `flow + flow` | 4.25M | 4.00M | preempted, resubmitted |
+
+- Repair actions:
+  - Cancelled stale dependent eval jobs with `DependencyNeverSatisfied`: `9671693`, `9671697`, and `9671700`.
+  - Resubmitted A100 `residual_mean_flow_wm` resume: training job `9676846_[2]`, same output root and W&B run ID via `RUN_TAG=a100-newflow1`.
+  - Resubmitted L40S `residual_mean_flow_wm` resume: training job `9676843_2`, same output root and W&B run ID via `RUN_TAG=l40s-newflow1`, `BATCH_SIZE=512`.
+  - Resubmitted L40S `flow + flow` resume: training job `9676844_[3]`, same output root and W&B run ID via `RUN_TAG=l40s-r1`, `BATCH_SIZE=512`.
+  - Reattached dependent eval jobs:
+    - `9676871_[28]` after `9676846_2`.
+    - `9676872_[31]` after `9676843_2`.
+    - `9676874_[34]` after `9676844_3`.
+- Next action:
+  - Watch H100 `ot_cfm_residual_wm` first; it should be the next new-flow WM to reach 5M and trigger eval row `27`.
+  - Keep the resubmitted preempted jobs pending/running; they should resume from the latest full checkpoints where available.
