@@ -574,3 +574,9 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 | `9671698` | `32` | `afterok:9652350_3` | L40S `shortcut_residual_flow_wm + gaussian` |
 | `9671699` | `33` | `afterok:9652350_4` | L40S `ot_cfm_residual_wm + gaussian` |
 | `9671700` | `34` | `afterok:9652366_3` | L40S `flow + flow` |
+
+2026-06-08 18:32 EDT final quick status:
+
+- H200 `9652347_3` and `9652347_4` are both running; both dependent eval jobs remain pending on `Dependency`.
+- Latest additional checkpoint movement: L40S `shortcut_residual_flow_wm + gaussian` advanced to `2.25M`.
+- Final error scan for this monitoring pass remained clean.
