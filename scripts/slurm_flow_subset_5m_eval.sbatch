@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-subset5m-eval
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-22
+#SBATCH --array=0-34
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -62,6 +62,18 @@ RUNS=(
   "subset40-5m-l40s-r1_wm-flow_pi-gaussian_seed-1 flow gaussian"
   "subset40-5m-wmvar-l40s_wm-residual_flow_pi-gaussian_seed-1 residual_flow gaussian"
   "subset40-5m-wmvar-h200-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1 residual_mean_flow_wm gaussian"
+  "subset40-5m-wmvar-h200-newflow1_wm-shortcut_residual_flow_wm_pi-gaussian_seed-1 shortcut_residual_flow_wm gaussian"
+  "subset40-5m-wmvar-h200-newflow1_wm-ot_cfm_residual_wm_pi-gaussian_seed-1 ot_cfm_residual_wm gaussian"
+  "subset40-5m-wmvar-h100-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1 residual_mean_flow_wm gaussian"
+  "subset40-5m-wmvar-h100-newflow1_wm-shortcut_residual_flow_wm_pi-gaussian_seed-1 shortcut_residual_flow_wm gaussian"
+  "subset40-5m-wmvar-h100-newflow1_wm-ot_cfm_residual_wm_pi-gaussian_seed-1 ot_cfm_residual_wm gaussian"
+  "subset40-5m-wmvar-a100-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1 residual_mean_flow_wm gaussian"
+  "subset40-5m-wmvar-a100-newflow1_wm-shortcut_residual_flow_wm_pi-gaussian_seed-1 shortcut_residual_flow_wm gaussian"
+  "subset40-5m-wmvar-a100-newflow1_wm-ot_cfm_residual_wm_pi-gaussian_seed-1 ot_cfm_residual_wm gaussian"
+  "subset40-5m-wmvar-l40s-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1 residual_mean_flow_wm gaussian"
+  "subset40-5m-wmvar-l40s-newflow1_wm-shortcut_residual_flow_wm_pi-gaussian_seed-1 shortcut_residual_flow_wm gaussian"
+  "subset40-5m-wmvar-l40s-newflow1_wm-ot_cfm_residual_wm_pi-gaussian_seed-1 ot_cfm_residual_wm gaussian"
+  "subset40-5m-l40s-r1_wm-flow_pi-flow_seed-1 flow flow"
 )
 
 read -r SOURCE_NAME DYNAMICS POLICY <<< "${RUNS[${SLURM_ARRAY_TASK_ID}]}"

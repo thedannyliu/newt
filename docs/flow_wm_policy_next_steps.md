@@ -519,3 +519,37 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
   - Let active H100/A100/L40S jobs continue to 5M under the same W&B run IDs and output roots.
   - When any new-flow run writes a 5M checkpoint, add or submit the corresponding eval row.
   - If active jobs hit `embers` time-limit or preemption before 5M, resubmit the same array index with the same `RUN_TAG` so it resumes from the latest full checkpoint when possible.
+
+2026-06-08 18:27 EDT monitoring and continuation:
+
+- Queue status:
+  - H100 `9652348_[2-4]`, A100 `9652349_[2-4]`, L40S `9652350_[2-4]`, and L40S `flow + flow` `9652366_3` are still running.
+  - H200 `9652347_[3-4]` remains pending, now with reason `Resources`.
+- Error scan:
+  - No active stderr contains a Python traceback, assertion, CUDA OOM, missing demonstration file, or W&B fatal error.
+- Updated checkpoint progress:
+
+| Run | Latest checkpoint | Latest full checkpoint | Status |
+| --- | ---: | ---: | --- |
+| H200 `residual_mean_flow_wm + gaussian` | 5.00M | 5.00M | completed and evaluated |
+| H200 `shortcut_residual_flow_wm + gaussian` | 2.25M | 2.00M | H200 resume pending |
+| H200 `ot_cfm_residual_wm + gaussian` | 2.75M | 2.50M | H200 resume pending |
+| H100 `residual_mean_flow_wm + gaussian` | 3.75M | 3.50M | running |
+| H100 `shortcut_residual_flow_wm + gaussian` | 3.50M | 3.50M | running |
+| H100 `ot_cfm_residual_wm + gaussian` | 4.00M | 4.00M | running |
+| A100 `residual_mean_flow_wm + gaussian` | 3.75M | 3.50M | running |
+| A100 `shortcut_residual_flow_wm + gaussian` | 2.75M | 2.50M | running |
+| A100 `ot_cfm_residual_wm + gaussian` | 1.25M | 1.00M | running |
+| L40S `residual_mean_flow_wm + gaussian` | 3.50M | 3.50M | running |
+| L40S `shortcut_residual_flow_wm + gaussian` | 2.00M | 2.00M | running |
+| L40S `ot_cfm_residual_wm + gaussian` | 2.75M | 2.50M | running |
+| L40S `flow + flow` | 4.00M | 4.00M | running |
+
+- Pipeline action:
+  - Added eval array rows `23-34` in `scripts/slurm_flow_subset_5m_eval.sbatch` for the remaining new-flow WM variants and L40S `flow + flow`.
+  - The eval script still hard-checks that the latest checkpoint is exactly `5_000_000_full.pt` or `5_000_000.pt`, so these rows will not accidentally evaluate partial checkpoints.
+  - Validation: `bash -n scripts/slurm_flow_subset_5m_eval.sbatch`.
+- Next action:
+  - Wait for H100 `ot_cfm_residual_wm` and L40S `flow + flow` to hit 5M first; they are closest.
+  - Submit eval rows as soon as corresponding 5M checkpoints appear.
+  - Continue existing running jobs; no repair/resubmit needed at this check.
