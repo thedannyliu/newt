@@ -553,3 +553,24 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
   - Wait for H100 `ot_cfm_residual_wm` and L40S `flow + flow` to hit 5M first; they are closest.
   - Submit eval rows as soon as corresponding 5M checkpoints appear.
   - Continue existing running jobs; no repair/resubmit needed at this check.
+
+2026-06-08 18:32 EDT dependent eval submissions:
+
+- H200 `shortcut_residual_flow_wm` array `9652347_3` started on H200, loaded the 40-task demo set, and resumed the same W&B run ID. H200 `ot_cfm_residual_wm` array `9652347_4` remains pending for resources.
+- Submitted dependent eval jobs on `gpu-h100` with `qos=embers`, W&B group `subset40-5m-eval-newflow`, and `EVAL_TAG=20260608c`.
+- Each eval job uses `afterok` on the corresponding training array task, so it only runs if that training task exits successfully. If a training task is preempted or times out, the dependent eval remains blocked and should be resubmitted after the next resume.
+
+| Eval job | Eval row | Dependency | Run |
+| ---: | ---: | --- | --- |
+| `9671688` | `23` | `afterok:9652347_3` | H200 `shortcut_residual_flow_wm + gaussian` |
+| `9671689` | `24` | `afterok:9652347_4` | H200 `ot_cfm_residual_wm + gaussian` |
+| `9671690` | `25` | `afterok:9652348_2` | H100 `residual_mean_flow_wm + gaussian` |
+| `9671691` | `26` | `afterok:9652348_3` | H100 `shortcut_residual_flow_wm + gaussian` |
+| `9671692` | `27` | `afterok:9652348_4` | H100 `ot_cfm_residual_wm + gaussian` |
+| `9671693` | `28` | `afterok:9652349_2` | A100 `residual_mean_flow_wm + gaussian` |
+| `9671694` | `29` | `afterok:9652349_3` | A100 `shortcut_residual_flow_wm + gaussian` |
+| `9671696` | `30` | `afterok:9652349_4` | A100 `ot_cfm_residual_wm + gaussian` |
+| `9671697` | `31` | `afterok:9652350_2` | L40S `residual_mean_flow_wm + gaussian` |
+| `9671698` | `32` | `afterok:9652350_3` | L40S `shortcut_residual_flow_wm + gaussian` |
+| `9671699` | `33` | `afterok:9652350_4` | L40S `ot_cfm_residual_wm + gaussian` |
+| `9671700` | `34` | `afterok:9652366_3` | L40S `flow + flow` |
