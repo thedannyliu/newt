@@ -343,3 +343,44 @@ Latest local progress snapshot:
 | A100 WM `endpoint_flow + gaussian` | 5.00M train | 0.2554 | 227.29 | 0.1220 | Completed 5M full; eval submitted in `9541180`. |
 | A100 WM `residual_flow + gaussian` | 4.00M eval | 0.1966 | 165.55 | n/a | Still running. |
 | H100 WM `residual_flow + gaussian` | 4.72M train | 0.2729 | 741.87 | 0.1376 | Still running under `9536283_1`. |
+
+2026-06-08 02:58 EDT monitoring and continuation:
+
+- Training status:
+  - No active training jobs were running at the start of this check; old `9431231_[0-3]` remained pending on H200.
+  - Completed since the previous note: H200 `flow + gaussian`, H200 `flow + flow`, A100 `mlp + gaussian`, H100 WM `residual_flow + gaussian`.
+  - Time-limit without code failure: A100 `flow + gaussian`, A100 `mlp + flow`, A100 `flow + flow`, A100 WM `residual_flow`, L40S `flow + gaussian`, L40S `flow + flow`, and L40S WM `residual_flow`.
+  - Error scan found only Slurm preemption/time-limit records; no Python traceback, assertion, or CUDA OOM was observed.
+- Checkpoint status:
+  - 5M checkpoint available: H100 2x2 all cells; H200 2x2 all cells; H200 endpoint/residual WM; A100 `mlp + gaussian`; A100 endpoint WM; H100 endpoint/residual WM; L40S MLP cells and endpoint WM.
+  - Still below 5M and resumed: A100 `flow + gaussian`, A100 `mlp + flow`, A100 `flow + flow`, A100 WM `residual_flow`, L40S `flow + gaussian`, L40S `flow + flow`, and L40S WM `residual_flow`.
+- Repair/continuation submissions:
+  - `9609358_[1-3]`: A100 2x2 resume for `flow + gaussian`, `mlp + flow`, and `flow + flow`.
+  - `9609357_1`: A100 WM `residual_flow + gaussian` resume.
+  - `9609388_[1,3]`: L40S 2x2 resume for `flow + gaussian` and `flow + flow`.
+  - `9609389_1`: L40S WM `residual_flow + gaussian` resume.
+  - L40S submissions required `--cpus-per-task=4` because the cluster enforces a 4:1 CPU:GPU ratio on `gpu-l40s`.
+- Eval script update:
+  - `scripts/slurm_flow_subset_5m_eval.sbatch` now includes A100 `mlp + gaussian`, H100 WM `residual_flow`, and H200 `flow + flow`.
+  - The eval script now accepts either `5_000_000_full.pt` or `5_000_000.pt`; eval does not need replay state, so non-full 5M checkpoints are valid for evaluation.
+  - `9609416_[13-15]` submitted these additional eval jobs; `9609416_13` started running and `9609416_[14-15]` were pending at submission check.
+
+Formal 40-task eval results available so far:
+
+| Run | Eval avg_score | Notes |
+| --- | ---: | --- |
+| H200 `mlp + flow` | 0.3391 | Best completed eval so far. |
+| L40S `mlp + flow` | 0.3151 | Close to H100 `mlp + flow`. |
+| H100 `mlp + flow` | 0.3149 | Strong MLP WM + flow policy. |
+| H100 `mlp + gaussian` | 0.3025 | Strong MLP WM baseline. |
+| H200 `mlp + gaussian` | 0.2848 | Lower than H100/H200 MLP+flow eval. |
+| L40S `mlp + gaussian` | 0.2679 | MLP WM remains stronger than flow WM. |
+| H200 `residual_flow + gaussian` | 0.2026 | Best completed flow-WM variant eval so far. |
+| A100 `endpoint_flow + gaussian` | 0.1981 | Endpoint flow is below residual flow. |
+| H200 `endpoint_flow + gaussian` | 0.1947 | Similar to A100 endpoint. |
+| L40S `endpoint_flow + gaussian` | 0.1872 | Similar but lower endpoint result. |
+| H100 `flow + gaussian` | 0.1361 | Pure flow WM remains weak. |
+| H200 `flow + gaussian` | 0.1036 | Pure flow WM remains weak. |
+| H100 `flow + flow` | 0.1006 | Pure flow WM + flow policy remains weak. |
+
+Current interpretation: formal eval confirms the train-metric pattern. MLP WM is clearly strongest; MLP WM + flow policy is the top cell so far despite higher action time; residual-flow WM is the only flow-WM variant with a plausible signal, but it is still well below MLP WM; pure flow WM remains poor.

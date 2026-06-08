@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-subset5m-eval
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-12
+#SBATCH --array=0-15
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -52,14 +52,18 @@ RUNS=(
   "subset40-5m-wmvar-l40s_wm-endpoint_flow_pi-gaussian_seed-1 endpoint_flow gaussian"
   "subset40-5m-wmvar-a100_wm-endpoint_flow_pi-gaussian_seed-1 endpoint_flow gaussian"
   "subset40-5m-h200-r1_wm-flow_pi-gaussian_seed-1 flow gaussian"
+  "subset40-5m-a100_wm-mlp_pi-gaussian_seed-1 mlp gaussian"
+  "subset40-5m-wmvar-h100_wm-residual_flow_pi-gaussian_seed-1 residual_flow gaussian"
+  "subset40-5m-h200-r1_wm-flow_pi-flow_seed-1 flow flow"
 )
 
 read -r SOURCE_NAME DYNAMICS POLICY <<< "${RUNS[${SLURM_ARRAY_TASK_ID}]}"
 NAME="eval-${SOURCE_NAME}${EVAL_TAG:+-${EVAL_TAG}}"
 MODEL_DIR="outputs/logs/soup/${SEED}/${SOURCE_NAME}/models"
 
-latest_full_checkpoint() {
-  find "${MODEL_DIR}" -maxdepth 1 -name '*_full.pt' -print | while read -r fp; do
+latest_checkpoint() {
+  local pattern="$1"
+  find "${MODEL_DIR}" -maxdepth 1 -name "${pattern}" -print | while read -r fp; do
     base="$(basename "${fp}" .pt)"
     base="${base%_full}"
     step="${base//_/}"
@@ -67,13 +71,16 @@ latest_full_checkpoint() {
   done | sort -n | tail -n 1 | cut -d' ' -f2-
 }
 
-CHECKPOINT="$(latest_full_checkpoint)"
+CHECKPOINT="$(latest_checkpoint '*_full.pt')"
+if [[ -z "${CHECKPOINT}" || "$(basename "${CHECKPOINT}")" != "5_000_000_full.pt" ]]; then
+  CHECKPOINT="$(latest_checkpoint '*.pt')"
+fi
 if [[ -z "${CHECKPOINT}" ]]; then
-  echo "No full checkpoint found under ${MODEL_DIR}" >&2
+  echo "No checkpoint found under ${MODEL_DIR}" >&2
   exit 2
 fi
-if [[ "$(basename "${CHECKPOINT}")" != "5_000_000_full.pt" ]]; then
-  echo "Latest full checkpoint is not 5M for ${SOURCE_NAME}: ${CHECKPOINT}" >&2
+if [[ "$(basename "${CHECKPOINT}")" != "5_000_000_full.pt" && "$(basename "${CHECKPOINT}")" != "5_000_000.pt" ]]; then
+  echo "Latest checkpoint is not 5M for ${SOURCE_NAME}: ${CHECKPOINT}" >&2
   exit 3
 fi
 
