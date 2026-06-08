@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-subset5m-eval
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-15
+#SBATCH --array=0-22
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -55,6 +55,13 @@ RUNS=(
   "subset40-5m-a100_wm-mlp_pi-gaussian_seed-1 mlp gaussian"
   "subset40-5m-wmvar-h100_wm-residual_flow_pi-gaussian_seed-1 residual_flow gaussian"
   "subset40-5m-h200-r1_wm-flow_pi-flow_seed-1 flow flow"
+  "subset40-5m-a100_wm-mlp_pi-flow_seed-1 mlp flow"
+  "subset40-5m-a100_wm-flow_pi-gaussian_seed-1 flow gaussian"
+  "subset40-5m-a100_wm-flow_pi-flow_seed-1 flow flow"
+  "subset40-5m-wmvar-a100_wm-residual_flow_pi-gaussian_seed-1 residual_flow gaussian"
+  "subset40-5m-l40s-r1_wm-flow_pi-gaussian_seed-1 flow gaussian"
+  "subset40-5m-wmvar-l40s_wm-residual_flow_pi-gaussian_seed-1 residual_flow gaussian"
+  "subset40-5m-wmvar-h200-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1 residual_mean_flow_wm gaussian"
 )
 
 read -r SOURCE_NAME DYNAMICS POLICY <<< "${RUNS[${SLURM_ARRAY_TASK_ID}]}"
