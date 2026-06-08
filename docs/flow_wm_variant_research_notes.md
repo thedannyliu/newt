@@ -140,3 +140,32 @@ Useful outcome:
 Negative outcome:
 
 - If all three remain well below MLP WM, the next practical direction should be stronger MLP/latent-sequence modeling or better policy/planner integration, not more pure flow steps.
+
+## Validation and Submissions
+
+Validation completed before GPU submission:
+
+- `python -m py_compile tdmpc2/common/flow.py tdmpc2/common/world_model.py tdmpc2/config.py`
+- `bash -n scripts/slurm_flow_wm_variants_5m.sbatch`
+- CPU smoke instantiated `residual_mean_flow_wm`, `shortcut_residual_flow_wm`, and `ot_cfm_residual_wm`, then verified finite `WorldModel.next()` outputs and finite `dynamics_loss()` values.
+
+Implementation commit:
+
+- `8c09a68 Add residual flow WM variants`
+
+Submitted on 2026-06-08 with `qos=embers`, `account=gts-agarg35`, W&B entity `danny010324`, project `newt-flow-2x2`, group `subset40-5m-new-flowwm-variants`, and `REPLAY_CHECKPOINT_FREQ=500000`:
+
+| Job | Partition/GPU | Array | Run tag | Batch size | Status at submission check |
+| --- | --- | --- | --- | ---: | --- |
+| `9611864` | `gpu-h200`, 1x H200 | `2-4` | `h200-newflow1` | 1024 | `2`, `3`, and `4` running |
+| `9611865` | `gpu-h100`, 1x H100 | `2-4` | `h100-newflow1` | 1024 | pending, `Priority` |
+| `9611867` | `gpu-a100`, 1x A100 | `2-4` | `a100-newflow1` | 1024 | pending, `Priority` |
+| `9611866` | `gpu-l40s`, 1x L40S | `2-4` | `l40s-newflow1` | 512 | pending, `Priority` |
+
+Array mapping:
+
+| Array index | Dynamics architecture | Policy |
+| ---: | --- | --- |
+| `2` | `residual_mean_flow_wm` | `gaussian` |
+| `3` | `shortcut_residual_flow_wm` | `gaussian` |
+| `4` | `ot_cfm_residual_wm` | `gaussian` |
