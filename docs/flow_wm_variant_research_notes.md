@@ -169,3 +169,12 @@ Array mapping:
 | `2` | `residual_mean_flow_wm` | `gaussian` |
 | `3` | `shortcut_residual_flow_wm` | `gaussian` |
 | `4` | `ot_cfm_residual_wm` | `gaussian` |
+
+2026-06-08 04:01 EDT monitoring:
+
+- H200 `9611864_[2-4]` is running on separate H200 nodes. All three jobs loaded the 40-task demo set, initialized W&B, printed the expected Newt architecture, and entered demonstration pretraining from scratch.
+- H100 `9611865_2` is running for `residual_mean_flow_wm`; `9611865_[3-4]` remains pending with reason `Priority`.
+- L40S `9611866_2` is running for `residual_mean_flow_wm`; `9611866_3` is running for `shortcut_residual_flow_wm`; `9611866_4` remains pending with reason `Priority`.
+- A100 `9611867_[2-4]` remains pending with reason `Priority`.
+- Error scan over the active new-flow stderr files found no `Traceback`, `RuntimeError`, `AssertionError`, CUDA OOM, missing data, or W&B fatal error. Current stderr contains only known environment warnings.
+- Slurm allocation check confirms each active array task has a single allocated GPU TRES and distinct output/W&B names.

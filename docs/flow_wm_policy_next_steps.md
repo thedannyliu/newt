@@ -384,3 +384,51 @@ Formal 40-task eval results available so far:
 | H100 `flow + flow` | 0.1006 | Pure flow WM + flow policy remains weak. |
 
 Current interpretation: formal eval confirms the train-metric pattern. MLP WM is clearly strongest; MLP WM + flow policy is the top cell so far despite higher action time; residual-flow WM is the only flow-WM variant with a plausible signal, but it is still well below MLP WM; pure flow WM remains poor.
+
+2026-06-08 04:01 EDT monitoring and continuation:
+
+- Queue status:
+  - New flow-WM variants are active: H200 `9611864_[2-4]` running; H100 `9611865_2` running; L40S `9611866_2` and `9611866_3` running; H100 `3-4`, L40S `4`, and A100 `2-4` pending with reason `Priority`.
+  - Ongoing old resumes are active: L40S `9609388_1` (`flow + gaussian`), L40S `9609388_3` (`flow + flow`), and L40S `9609389_1` (`residual_flow + gaussian`).
+  - A100 resume jobs `9609358_[1-3]` and `9609357_1` remain pending with reason `Priority`.
+- Error scan:
+  - No active Newt stderr contains `Traceback`, `RuntimeError`, `AssertionError`, CUDA OOM, missing demonstrations, or W&B fatal errors.
+  - Current warnings are known Gym/ALE/W&B informational warnings only.
+- Resource check:
+  - Active H200 jobs each have 1x H200 and about 29.6 GB RSS during startup/pretraining.
+  - Active L40S continuation jobs use 1x L40S each, with the cluster-required 4 CPUs per GPU.
+- Progress:
+  - L40S `flow + gaussian` has advanced to at least `4_750_000.pt` and should be evaluated once it writes a 5M checkpoint.
+  - L40S `flow + flow` resumed from `2_000_000_full.pt` and has advanced beyond `2_250_000.pt`.
+  - L40S WM `residual_flow + gaussian` resumed from `3_500_000_full.pt`.
+  - New `residual_mean_flow_wm`, `shortcut_residual_flow_wm`, and `ot_cfm_residual_wm` jobs are still in demo pretraining; no metrics/checkpoints are expected until pretraining completes.
+- Additional completed eval results from `9609416_[13-15]`:
+
+| Run | Eval avg_score | Notes |
+| --- | ---: | --- |
+| A100 `mlp + gaussian` | 0.3076 | Strong MLP WM baseline; best completed Gaussian-policy MLP-WM eval so far. |
+| H100 `residual_flow + gaussian` | 0.2146 | Best completed residual-flow WM eval so far, but still well below MLP WM. |
+| H200 `flow + flow` | 0.1220 | Pure flow WM remains weak even at 5M. |
+
+Updated formal 40-task eval ranking:
+
+| Run | Eval avg_score |
+| --- | ---: |
+| H200 `mlp + flow` | 0.3391 |
+| L40S `mlp + flow` | 0.3151 |
+| H100 `mlp + flow` | 0.3149 |
+| A100 `mlp + gaussian` | 0.3076 |
+| H100 `mlp + gaussian` | 0.3025 |
+| H200 `mlp + gaussian` | 0.2848 |
+| L40S `mlp + gaussian` | 0.2679 |
+| H100 `residual_flow + gaussian` | 0.2146 |
+| H200 `residual_flow + gaussian` | 0.2026 |
+| A100 `endpoint_flow + gaussian` | 0.1981 |
+| H200 `endpoint_flow + gaussian` | 0.1947 |
+| L40S `endpoint_flow + gaussian` | 0.1872 |
+| H100 `flow + gaussian` | 0.1361 |
+| H200 `flow + flow` | 0.1220 |
+| H200 `flow + gaussian` | 0.1036 |
+| H100 `flow + flow` | 0.1006 |
+
+Current interpretation is unchanged: the strongest signal is still MLP WM; residual-flow WM is the only flow-WM family worth extending; pure flow WM and more flow-policy-heavy cells remain weak relative to MLP WM. The new residual MeanFlow/shortcut/OT-CFM jobs are the right next test because they preserve the MLP dynamics path and only alter the residual correction.
