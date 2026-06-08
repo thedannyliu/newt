@@ -2,7 +2,7 @@
 #SBATCH --job-name=newt-wmvariants
 #SBATCH --output=outputs/slurm/%x-%A_%a.out
 #SBATCH --error=outputs/slurm/%x-%A_%a.err
-#SBATCH --array=0-1
+#SBATCH --array=0-4
 #SBATCH --partition=gpu-h200
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -38,7 +38,7 @@ if [[ -z "${WANDB_ENTITY:-}" ]]; then
   exit 1
 fi
 
-DYNAMICS_LIST=(endpoint_flow residual_flow)
+DYNAMICS_LIST=(endpoint_flow residual_flow residual_mean_flow_wm shortcut_residual_flow_wm ot_cfm_residual_wm)
 DYNAMICS="${DYNAMICS_LIST[${SLURM_ARRAY_TASK_ID}]}"
 POLICY="gaussian"
 NAME="subset40-5m-wmvar${RUN_TAG:+-${RUN_TAG}}_wm-${DYNAMICS}_pi-${POLICY}_seed-${SEED}"

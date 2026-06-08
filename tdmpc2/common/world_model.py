@@ -2,7 +2,15 @@ import torch
 import torch.nn as nn
 
 from common import layers, math, init
-from common.flow import ConditionalFlow, EndpointFlowDynamics, FlowPolicy, ResidualFlowDynamics
+from common.flow import (
+	ConditionalFlow,
+	EndpointFlowDynamics,
+	FlowPolicy,
+	OTResidualFlowDynamics,
+	ResidualFlowDynamics,
+	ResidualMeanFlowDynamics,
+	ShortcutResidualFlowDynamics,
+)
 from tensordict import TensorDict
 
 
@@ -49,6 +57,24 @@ class WorldModel(nn.Module):
 			)
 		elif cfg.dynamics_arch == "residual_flow":
 			self._dynamics = ResidualFlowDynamics(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		elif cfg.dynamics_arch in {"residual_mean_flow", "residual_mean_flow_wm"}:
+			self._dynamics = ResidualMeanFlowDynamics(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		elif cfg.dynamics_arch in {"shortcut_residual_flow", "shortcut_residual_flow_wm"}:
+			self._dynamics = ShortcutResidualFlowDynamics(
+				cfg,
+				cfg.latent_dim,
+				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
+			)
+		elif cfg.dynamics_arch in {"ot_cfm_residual", "ot_cfm_residual_wm"}:
+			self._dynamics = OTResidualFlowDynamics(
 				cfg,
 				cfg.latent_dim,
 				cfg.latent_dim + cfg.action_dim + cfg.task_dim,
@@ -176,7 +202,7 @@ class WorldModel(nn.Module):
 		if self.cfg.dynamics_arch == "endpoint_flow":
 			residual = self._dynamics(cond)
 			return layers.SimNorm(self.cfg)(z + residual)
-		if self.cfg.dynamics_arch == "residual_flow":
+		if self.cfg.dynamics_arch in {"residual_flow", "residual_mean_flow", "residual_mean_flow_wm", "shortcut_residual_flow", "shortcut_residual_flow_wm", "ot_cfm_residual", "ot_cfm_residual_wm"}:
 			base, residual = self._dynamics(cond, steps=self.cfg.flow_steps)
 			return layers.SimNorm(self.cfg)(base + residual)
 		return self._dynamics(cond)
@@ -192,7 +218,7 @@ class WorldModel(nn.Module):
 			return self._dynamics.loss((target_z - z).detach(), cond).mean()
 		if self.cfg.dynamics_arch == "endpoint_flow":
 			return self._dynamics.loss((target_z - z).detach(), cond).mean()
-		if self.cfg.dynamics_arch == "residual_flow":
+		if self.cfg.dynamics_arch in {"residual_flow", "residual_mean_flow", "residual_mean_flow_wm", "shortcut_residual_flow", "shortcut_residual_flow_wm", "ot_cfm_residual", "ot_cfm_residual_wm"}:
 			return self._dynamics.loss(target_z.detach(), cond).mean()
 		pred_z = self._dynamics(cond)
 		return torch.nn.functional.mse_loss(pred_z, target_z)

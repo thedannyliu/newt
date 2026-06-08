@@ -75,6 +75,120 @@ class ConditionalFlow(nn.Module):
 		return x
 
 
+class OTConditionalFlow(ConditionalFlow):
+	"""
+	Rectified flow with a lightweight sliced-OT source/target pairing.
+	Target conditioning stays attached to each batch row; only the Gaussian
+	source samples are reordered to make the source-target coupling straighter.
+	"""
+
+	def loss(self, target, cond, mask=None):
+		assert mask is None, "OTConditionalFlow is only used for dynamics residuals"
+		noise = torch.randn_like(target)
+		target_flat = target.reshape(-1, target.shape[-1])
+		noise_flat = noise.reshape(-1, noise.shape[-1])
+		proj = torch.randn(target_flat.shape[-1], device=target.device, dtype=target.dtype)
+		proj = proj / proj.norm().clamp_min(1e-6)
+		target_order = (target_flat @ proj).argsort()
+		noise_order = (noise_flat @ proj).argsort()
+		paired_noise = noise_flat.clone()
+		paired_noise[target_order] = noise_flat[noise_order]
+		noise = paired_noise.reshape_as(target)
+		t = torch.rand(*target.shape[:-1], 1, device=target.device, dtype=target.dtype)
+		x_t = (1 - t) * noise + t * target
+		target_velocity = target - noise
+		pred_velocity = self.velocity(x_t, cond, t)
+		return F.mse_loss(pred_velocity, target_velocity, reduction='none').mean(-1)
+
+
+class MeanFlow(nn.Module):
+	"""
+	One-step average-velocity flow.
+	This is a compact latent residual pilot inspired by MeanFlow: the network
+	predicts average velocity over an interval [r, t], enabling one function
+	evaluation at rollout time.
+	"""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__()
+		self.sample_dim = sample_dim
+		self.t_embed = TimeEmbedding(cfg.flow_t_dim)
+		self.net = layers.mlp(
+			sample_dim + cond_dim + 2 * cfg.flow_t_dim,
+			cfg.flow_hidden_layers * [cfg.mlp_dim],
+			sample_dim,
+		)
+
+	def average_velocity(self, x, cond, r, t):
+		if r.ndim == x.ndim - 1:
+			r = r.unsqueeze(-1)
+		if t.ndim == x.ndim - 1:
+			t = t.unsqueeze(-1)
+		return self.net(torch.cat([x, cond, self.t_embed(r), self.t_embed(t)], dim=-1))
+
+	def loss(self, target, cond):
+		noise = torch.randn_like(target)
+		r = torch.rand(*target.shape[:-1], 1, device=target.device, dtype=target.dtype)
+		t = r + (1 - r) * torch.rand(*target.shape[:-1], 1, device=target.device, dtype=target.dtype)
+		x_r = (1 - r) * noise + r * target
+		target_velocity = target - noise
+		pred_velocity = self.average_velocity(x_r, cond, r, t)
+		return F.mse_loss(pred_velocity, target_velocity, reduction='none').mean(-1)
+
+	def sample(self, cond, base=None):
+		if base is None:
+			base = torch.zeros(*cond.shape[:-1], self.sample_dim, device=cond.device, dtype=cond.dtype)
+		r = torch.zeros(*base.shape[:-1], 1, device=base.device, dtype=base.dtype)
+		t = torch.ones(*base.shape[:-1], 1, device=base.device, dtype=base.dtype)
+		return base + self.average_velocity(base, cond, r, t)
+
+
+class ShortcutFlow(nn.Module):
+	"""
+	Step-size-conditioned flow for few-step or one-step residual rollouts.
+	"""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__()
+		self.sample_dim = sample_dim
+		self.t_embed = TimeEmbedding(cfg.flow_t_dim)
+		self.dt_embed = TimeEmbedding(cfg.flow_t_dim)
+		self.net = layers.mlp(
+			sample_dim + cond_dim + 2 * cfg.flow_t_dim,
+			cfg.flow_hidden_layers * [cfg.mlp_dim],
+			sample_dim,
+		)
+
+	def velocity(self, x, cond, t, dt):
+		if t.ndim == x.ndim - 1:
+			t = t.unsqueeze(-1)
+		if dt.ndim == x.ndim - 1:
+			dt = dt.unsqueeze(-1)
+		return self.net(torch.cat([x, cond, self.t_embed(t), self.dt_embed(dt)], dim=-1))
+
+	def loss(self, target, cond):
+		noise = torch.randn_like(target)
+		t = torch.rand(*target.shape[:-1], 1, device=target.device, dtype=target.dtype)
+		max_dt = (1 - t).clamp_min(1e-4)
+		dt = max_dt * torch.rand(*target.shape[:-1], 1, device=target.device, dtype=target.dtype)
+		x_t = (1 - t) * noise + t * target
+		target_velocity = target - noise
+		pred_velocity = self.velocity(x_t, cond, t, dt)
+		return F.mse_loss(pred_velocity, target_velocity, reduction='none').mean(-1)
+
+	def sample(self, cond, base=None, steps: int = 4):
+		if base is None:
+			base = torch.zeros(*cond.shape[:-1], self.sample_dim, device=cond.device, dtype=cond.dtype)
+		x = base
+		steps = max(int(steps), 1)
+		dt_value = 1.0 / steps
+		for i in range(steps):
+			t = torch.full((*x.shape[:-1], 1), fill_value=i * dt_value, device=x.device, dtype=x.dtype)
+			dt = torch.full_like(t, dt_value)
+			x = x + dt * self.velocity(x, cond, t, dt)
+		return x
+
+
 class EndpointFlowDynamics(nn.Module):
 	"""
 	Deterministic endpoint residual predictor.
@@ -131,6 +245,35 @@ class ResidualFlowDynamics(nn.Module):
 		residual_target = (target_z - base).detach()
 		flow_loss = self.flow.loss(residual_target, cond)
 		return base_loss + flow_loss
+
+
+class ResidualMeanFlowDynamics(ResidualFlowDynamics):
+	"""MLP next-latent dynamics plus one-step mean-flow residual correction."""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__(cfg, sample_dim, cond_dim)
+		self.flow = MeanFlow(cfg, sample_dim, cond_dim)
+
+	def forward(self, cond, steps: int = 4):
+		base = self.base(cond)
+		residual = self.flow.sample(cond, base=torch.zeros_like(base))
+		return base, residual
+
+
+class ShortcutResidualFlowDynamics(ResidualFlowDynamics):
+	"""MLP next-latent dynamics plus step-size-conditioned shortcut residual flow."""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__(cfg, sample_dim, cond_dim)
+		self.flow = ShortcutFlow(cfg, sample_dim, cond_dim)
+
+
+class OTResidualFlowDynamics(ResidualFlowDynamics):
+	"""MLP next-latent dynamics plus sliced-OT rectified-flow residual correction."""
+
+	def __init__(self, cfg, sample_dim: int, cond_dim: int):
+		super().__init__(cfg, sample_dim, cond_dim)
+		self.flow = OTConditionalFlow(cfg, sample_dim, cond_dim)
 
 
 class FlowPolicy(nn.Module):
