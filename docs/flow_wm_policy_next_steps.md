@@ -469,3 +469,53 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
   - `9652366_[3]`: L40S 2x2 resume for `flow + flow`.
 - Submission check:
   - All new submissions were pending; reasons were `Priority` for H100/A100/L40S/eval and `Resources` for H200. No startup stderr/stdout existed yet.
+
+2026-06-08 16:49 EDT monitoring and continuation:
+
+- Queue status:
+  - Eval job `9652308_[16-22]` completed.
+  - New-flow resumes are running on H100 `9652348_[2-4]`, A100 `9652349_[2-4]`, and L40S `9652350_[2-4]`.
+  - H200 new-flow `9652347_[3-4]` remains pending with reason `Priority`.
+  - L40S 2x2 `flow + flow` resume `9652366_3` is running.
+- Error scan:
+  - No active stderr contains a Python traceback, assertion, CUDA OOM, missing demonstration file, or W&B fatal error.
+  - W&B emitted resume warnings for older step logs below the current W&B cursor; those points are ignored by W&B and are not training failures.
+- Current checkpoint progress:
+
+| Run | Latest checkpoint | Latest full checkpoint | Status |
+| --- | ---: | ---: | --- |
+| H200 `residual_mean_flow_wm + gaussian` | 5.00M | 5.00M | completed and evaluated |
+| H200 `shortcut_residual_flow_wm + gaussian` | 2.25M | 2.00M | H200 resume pending |
+| H200 `ot_cfm_residual_wm + gaussian` | 2.75M | 2.50M | H200 resume pending |
+| H100 `residual_mean_flow_wm + gaussian` | 2.75M | 2.50M | running |
+| H100 `shortcut_residual_flow_wm + gaussian` | 2.75M | 2.50M | running |
+| H100 `ot_cfm_residual_wm + gaussian` | 3.25M | 3.00M | running |
+| A100 `residual_mean_flow_wm + gaussian` | 3.00M | 3.00M | running |
+| A100 `shortcut_residual_flow_wm + gaussian` | 2.25M | 2.00M | running |
+| A100 `ot_cfm_residual_wm + gaussian` | 0.75M | 0.50M | running |
+| L40S `residual_mean_flow_wm + gaussian` | 3.00M | 3.00M | running |
+| L40S `shortcut_residual_flow_wm + gaussian` | 1.75M | 1.50M | running |
+| L40S `ot_cfm_residual_wm + gaussian` | 2.25M | 2.00M | running |
+| L40S `flow + flow` | 3.75M | 3.50M | running |
+
+- New eval results from `9652308_[16-22]`:
+
+| Run | Eval avg_score | Notes |
+| --- | ---: | --- |
+| A100 `mlp + flow` | 0.3152 | Confirms MLP WM + flow policy is strong across GPUs. |
+| A100 `flow + gaussian` | 0.1034 | Pure flow WM remains weak. |
+| A100 `flow + flow` | 0.1361 | Pure flow WM remains weak even with flow policy. |
+| A100 `residual_flow + gaussian` | 0.2550 | Best A100 flow-WM result so far; still below MLP WM. |
+| L40S `flow + gaussian` | 0.0809 | Weakest completed pure flow WM eval. |
+| L40S `residual_flow + gaussian` | 0.2558 | Best completed residual-flow WM score so far. |
+| H200 `residual_mean_flow_wm + gaussian` | 0.2248 | Beats earlier H200 residual-flow eval, but trails A100/L40S residual-flow and all MLP-WM evals. |
+
+- Updated interpretation:
+  - MLP WM remains the strongest world-model architecture at 5M.
+  - Residual-flow WM is the only flow-WM direction with a meaningful signal; A100/L40S residual-flow reaches about `0.255`, but still trails MLP Gaussian and MLP flow baselines.
+  - `residual_mean_flow_wm` is viable enough to continue but does not yet beat the best plain `residual_flow` result.
+  - Pure flow WM is consistently weak across H100/H200/A100/L40S.
+- Next action:
+  - Let active H100/A100/L40S jobs continue to 5M under the same W&B run IDs and output roots.
+  - When any new-flow run writes a 5M checkpoint, add or submit the corresponding eval row.
+  - If active jobs hit `embers` time-limit or preemption before 5M, resubmit the same array index with the same `RUN_TAG` so it resumes from the latest full checkpoint when possible.
