@@ -432,3 +432,40 @@ Updated formal 40-task eval ranking:
 | H100 `flow + flow` | 0.1006 |
 
 Current interpretation is unchanged: the strongest signal is still MLP WM; residual-flow WM is the only flow-WM family worth extending; pure flow WM and more flow-policy-heavy cells remain weak relative to MLP WM. The new residual MeanFlow/shortcut/OT-CFM jobs are the right next test because they preserve the MLP dynamics path and only alter the residual correction.
+
+2026-06-08 14:59 EDT monitoring and continuation:
+
+- Queue at this check contains no active Newt training jobs; the only running GPU jobs are separate PushT jobs.
+- Recent Newt outcomes:
+  - A100 `flow + gaussian`, A100 `mlp + flow`, and A100 `flow + flow` completed 5M.
+  - A100 WM `residual_flow + gaussian` completed 5M.
+  - L40S `flow + gaussian` completed 5M.
+  - L40S WM `residual_flow + gaussian` completed 5M.
+  - L40S `flow + flow` timed out at about 3.5M and still needs continuation.
+  - New H200 `residual_mean_flow_wm + gaussian` completed 5M.
+  - Other new-flow variants were interrupted by `embers` preemption/time-limit before 5M.
+- Error scan:
+  - No Python traceback, assertion, CUDA OOM, missing demonstrations, or W&B fatal error was found.
+  - Interrupted jobs show Slurm `PREEMPTED` or `TIMEOUT` only.
+- Newly available 5M checkpoints submitted for eval:
+
+| Eval array | Run | Dynamics | Policy |
+| ---: | --- | --- | --- |
+| `16` | A100 `mlp + flow` | `mlp` | `flow` |
+| `17` | A100 `flow + gaussian` | `flow` | `gaussian` |
+| `18` | A100 `flow + flow` | `flow` | `flow` |
+| `19` | A100 WM `residual_flow + gaussian` | `residual_flow` | `gaussian` |
+| `20` | L40S `flow + gaussian` | `flow` | `gaussian` |
+| `21` | L40S WM `residual_flow + gaussian` | `residual_flow` | `gaussian` |
+| `22` | H200 `residual_mean_flow_wm + gaussian` | `residual_mean_flow_wm` | `gaussian` |
+
+- Eval submission:
+  - `9652308_[16-22%4]`: submitted on `gpu-h100`, pending with reason `Priority` at submission check.
+- Training continuation submissions:
+  - `9652347_[3-4]`: H200 new-flow resume for `shortcut_residual_flow_wm` and `ot_cfm_residual_wm`.
+  - `9652348_[2-4]`: H100 new-flow resume for `residual_mean_flow_wm`, `shortcut_residual_flow_wm`, and `ot_cfm_residual_wm`.
+  - `9652349_[2-4]`: A100 new-flow resume for all three new-flow variants.
+  - `9652350_[2-4]`: L40S new-flow resume for all three new-flow variants, `BATCH_SIZE=512`.
+  - `9652366_[3]`: L40S 2x2 resume for `flow + flow`.
+- Submission check:
+  - All new submissions were pending; reasons were `Priority` for H100/A100/L40S/eval and `Resources` for H200. No startup stderr/stdout existed yet.

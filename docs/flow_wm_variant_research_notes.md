@@ -178,3 +178,27 @@ Array mapping:
 - A100 `9611867_[2-4]` remains pending with reason `Priority`.
 - Error scan over the active new-flow stderr files found no `Traceback`, `RuntimeError`, `AssertionError`, CUDA OOM, missing data, or W&B fatal error. Current stderr contains only known environment warnings.
 - Slurm allocation check confirms each active array task has a single allocated GPU TRES and distinct output/W&B names.
+
+2026-06-08 14:59 EDT monitoring:
+
+- Previous new-flow submissions finished or were interrupted by `embers` walltime/preemption only; no Python traceback, assertion, CUDA OOM, missing data, or W&B fatal error was found.
+- Completed 5M:
+  - H200 `residual_mean_flow_wm + gaussian`, run `subset40-5m-wmvar-h200-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1`, wrote `5_000_000_full.pt`.
+- Partial new-flow progress before preemption/time-limit:
+  - H200 `shortcut_residual_flow_wm`: latest `2_250_000.pt`.
+  - H200 `ot_cfm_residual_wm`: latest `2_750_000.pt`.
+  - H100 `residual_mean_flow_wm`: latest `2_750_000.pt`.
+  - H100 `shortcut_residual_flow_wm`: latest `2_750_000.pt`.
+  - H100 `ot_cfm_residual_wm`: latest `3_000_000_full.pt`.
+  - A100 `residual_mean_flow_wm`: latest `2_750_000.pt`.
+  - A100 `shortcut_residual_flow_wm`: latest `2_250_000.pt`.
+  - A100 `ot_cfm_residual_wm`: latest early checkpoint only; the job was preempted early.
+  - L40S `residual_mean_flow_wm`: latest `2_750_000.pt`.
+  - L40S `shortcut_residual_flow_wm`: latest `1_750_000.pt`.
+  - L40S `ot_cfm_residual_wm`: latest `2_000_000_full.pt`.
+- Eval submitted for the completed H200 `residual_mean_flow_wm` 5M checkpoint as eval array index `22` in job `9652308`.
+- Resume submissions:
+  - `9652347_[3-4]`: H200 resume for `shortcut_residual_flow_wm` and `ot_cfm_residual_wm`.
+  - `9652348_[2-4]`: H100 resume for all three new-flow variants.
+  - `9652349_[2-4]`: A100 resume for all three new-flow variants.
+  - `9652350_[2-4]`: L40S resume for all three new-flow variants, with `BATCH_SIZE=512`.
