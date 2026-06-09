@@ -676,3 +676,30 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 - Queue after submission:
   - All six new training array tasks are pending with reason `None`.
   - All six new eval jobs are pending on `Dependency`.
+
+2026-06-09 14:29 EDT monitoring and continuation:
+
+- New completed eval:
+
+| Run | Eval job | Eval avg_score | Notes |
+| --- | ---: | ---: | --- |
+| H200 `ot_cfm_residual_wm + gaussian` | `9702344_24` | 0.23227 | Similar to H100 OT-CFM and below residual_mean/shortcut/plain residual-flow WM. |
+
+- Updated status for remaining 40-task new-flow variants:
+
+| Run | Latest checkpoint | Latest full checkpoint | Status |
+| --- | ---: | ---: | --- |
+| H200 `shortcut_residual_flow_wm + gaussian` | 5.00M | 5.00M | direct eval submitted as `9747543_[23]` |
+| A100 `shortcut_residual_flow_wm + gaussian` | 4.50M | 4.50M | resubmitted as `9747545_[3]` |
+| A100 `ot_cfm_residual_wm + gaussian` | 3.75M | 3.50M | resubmitted as `9747545_[4]` |
+| L40S `shortcut_residual_flow_wm + gaussian` | 4.50M | 4.50M | still running as `9702326_3`; eval `9702347_[32]` remains dependent |
+| L40S `ot_cfm_residual_wm + gaussian` | 4.50M | 4.50M | resubmitted as `9747546_[4]` |
+
+- Repair actions:
+  - Cancelled stale dependent eval jobs `9702343`, `9702345`, `9702346`, and `9702348`.
+  - Submitted direct H200 shortcut eval row `23` as `9747543_[23]` because the 5M checkpoint exists.
+  - Resubmitted A100 shortcut/OT-CFM as `9747545_[3-4]`.
+  - Resubmitted L40S OT-CFM as `9747546_[4]`.
+- Current read:
+  - OT-CFM remains below the stronger residual-flow family in completed evals.
+  - Continue only to finish the already-running/comparable cells; do not expand OT-CFM further unless a later GPU replicate unexpectedly improves.

@@ -120,6 +120,43 @@ Startup check:
 - The run reports `Steps: 10,000,000`, `World size: 1`, and run name `subset20-10m-a100-r1_wm-mlp_pi-gaussian_seed-1`.
 - No Python traceback, missing data error, or CUDA OOM appeared at startup.
 
+## 2026-06-09 Monitoring and Continuation
+
+At the 2026-06-09 14:29 EDT check, the initial H200/H100/A100 jobs had been interrupted by `embers` preemption or time limit. The L40S jobs were still running.
+
+No Python traceback, missing data error, or CUDA OOM was found in the checked stderr logs. Interruptions were Slurm preemption or time-limit events only.
+
+Checkpoint progress:
+
+| Run | Latest checkpoint | Latest full checkpoint | Status |
+| --- | ---: | ---: | --- |
+| H200 `mlp + gaussian` | 1.25M | 1.00M | preempted; resubmitted |
+| H200 `mlp + flow` | 1.00M | 1.00M | preempted; resubmitted |
+| H200 `residual_flow + gaussian` | 0.75M | 0.50M | preempted; resubmitted |
+| H200 `residual_mean_flow_wm + gaussian` | 1.00M | 1.00M | preempted; resubmitted |
+| H100 `mlp + gaussian` | 4.25M | 4.00M | timed out; resubmitted |
+| H100 `mlp + flow` | 3.00M | 3.00M | timed out; resubmitted |
+| H100 `residual_flow + gaussian` | 1.50M | 1.50M | preempted; resubmitted |
+| H100 `residual_mean_flow_wm + gaussian` | 4.00M | 4.00M | preempted; resubmitted |
+| A100 `mlp + gaussian` | 3.75M | 3.50M | timed out; resubmitted |
+| A100 `mlp + flow` | 2.25M | 2.00M | timed out; resubmitted |
+| A100 `residual_flow + gaussian` | 1.75M | 1.50M | preempted; resubmitted |
+| A100 `residual_mean_flow_wm + gaussian` | 2.25M | 2.00M | preempted; resubmitted |
+| L40S `mlp + gaussian` | 2.50M | 2.50M | still running |
+| L40S `mlp + flow` | 1.50M | 1.50M | still running |
+| L40S `residual_flow + gaussian` | 1.25M | 1.00M | still running |
+| L40S `residual_mean_flow_wm + gaussian` | 1.00M | 1.00M | still running |
+
+Continuation submissions:
+
+| Job | Partition | Array | Run tag | Status at submission check |
+| ---: | --- | --- | --- | --- |
+| `9747574` | `gpu-h200` | `0-3` | `h200-r1` | pending, `Priority` |
+| `9747575` | `gpu-h100` | `0-3` | `h100-r1` | pending, `Priority` |
+| `9747577` | `gpu-a100` | `0-3` | `a100-r1` | pending, `Priority` |
+
+The L40S initial jobs were left running and were not duplicated.
+
 ## Success Criteria
 
 Primary metric:
