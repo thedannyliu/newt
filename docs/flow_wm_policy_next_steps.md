@@ -632,3 +632,47 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
   - Running eval: `9681885_27` for H100 `ot_cfm_residual_wm`.
   - Running training: `9681886_3` H100 shortcut, `9652347_4` H200 OT-CFM, `9676846_2` A100 residual_mean, `9652349_[3-4]` A100 shortcut/OT-CFM, `9676843_2` L40S residual_mean, `9676844_3` L40S flow+flow, and `9652350_[3-4]` L40S shortcut/OT-CFM.
   - Pending training: `9681888_3` H200 shortcut, waiting for H200 resources.
+
+2026-06-09 02:56 EDT monitoring and continuation:
+
+- Completed 5M evals since the previous check:
+
+| Run | Eval job | Eval avg_score | Notes |
+| --- | ---: | ---: | --- |
+| H100 `residual_mean_flow_wm + gaussian` | `9671690_25` | 0.24538 | Best `residual_mean_flow_wm` so far, still below best plain residual-flow WM. |
+| H100 `ot_cfm_residual_wm + gaussian` | `9681885_27` | 0.23161 | Below residual_mean and plain residual-flow WM. |
+| H100 `shortcut_residual_flow_wm + gaussian` | `9681923_26` | 0.24033 | Similar to residual_mean, below plain residual-flow WM. |
+| A100 `residual_mean_flow_wm + gaussian` | `9676871_28` | 0.23934 | Below H100 residual_mean. |
+| L40S `residual_mean_flow_wm + gaussian` | `9676872_31` | 0.20985 | Weak residual_mean replicate. |
+| L40S `flow + flow` | `9676874_34` | 0.11709 | Pure flow WM remains weak. |
+
+- Current interpretation:
+  - The new residual flow variants are viable but do not beat the best completed `residual_flow + gaussian` result (`0.2558`).
+  - `residual_mean_flow_wm` is the strongest new variant so far (`0.24538` on H100).
+  - `shortcut_residual_flow_wm` is close (`0.24033` on H100).
+  - `ot_cfm_residual_wm` underperforms on the completed H100 eval (`0.23161`).
+  - MLP WM remains clearly stronger than all flow-WM variants.
+- Remaining unfinished 5M runs:
+
+| Run | Latest checkpoint | Latest full checkpoint |
+| --- | ---: | ---: |
+| H200 `shortcut_residual_flow_wm + gaussian` | 3.75M | 3.50M |
+| H200 `ot_cfm_residual_wm + gaussian` | 4.25M | 4.00M |
+| A100 `shortcut_residual_flow_wm + gaussian` | 4.00M | 4.00M |
+| A100 `ot_cfm_residual_wm + gaussian` | 2.75M | 2.50M |
+| L40S `shortcut_residual_flow_wm + gaussian` | 3.25M | 3.00M |
+| L40S `ot_cfm_residual_wm + gaussian` | 3.75M | 3.50M |
+
+- Repair/continuation actions:
+  - Cancelled stale dependent eval jobs: `9671689`, `9671694`, `9671696`, `9671698`, `9671699`, and `9681921`.
+  - Resubmitted remaining unfinished runs:
+    - H200 shortcut/OT-CFM: `9702325_[3-4]`.
+    - A100 shortcut/OT-CFM: `9702327_[3-4]`.
+    - L40S shortcut/OT-CFM: `9702326_[3-4]`.
+  - Reattached dependent eval jobs:
+    - H200 shortcut/OT-CFM: `9702343_[23]`, `9702344_[24]`.
+    - A100 shortcut/OT-CFM: `9702345_[29]`, `9702346_[30]`.
+    - L40S shortcut/OT-CFM: `9702347_[32]`, `9702348_[33]`.
+- Queue after submission:
+  - All six new training array tasks are pending with reason `None`.
+  - All six new eval jobs are pending on `Dependency`.
