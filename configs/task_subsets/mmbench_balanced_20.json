@@ -1,0 +1,22 @@
+[
+  "walker-walk",
+  "cup-catch",
+  "walker-run-backward",
+  "reacher-three-easy",
+  "mw-door-open",
+  "mw-drawer-close",
+  "ms-pick-cube",
+  "ms-reach",
+  "mujoco-ant",
+  "mujoco-hopper",
+  "bipedal-walker-flat",
+  "lunarlander-hover",
+  "rd-push-red",
+  "rd-open-drawer",
+  "og-point-maze",
+  "og-ant-circle",
+  "pygame-coinrun",
+  "pygame-pong",
+  "atari-assault",
+  "atari-seaquest"
+]
