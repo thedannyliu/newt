@@ -703,3 +703,12 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 - Current read:
   - OT-CFM remains below the stronger residual-flow family in completed evals.
   - Continue only to finish the already-running/comparable cells; do not expand OT-CFM further unless a later GPU replicate unexpectedly improves.
+
+2026-06-09 16:57 EDT monitoring and continuation:
+
+- H200 `shortcut_residual_flow_wm + gaussian` reached `5_000_000_full.pt`; direct eval row `23` was submitted as `9747543_[23]` and completed. Its score still needs to be parsed in the next result sweep.
+- A100 `shortcut_residual_flow_wm + gaussian` reached `5_000_000_full.pt`; direct eval row `29` was submitted as `9757888_[29]`.
+- L40S `ot_cfm_residual_wm + gaussian` reached `5_000_000_full.pt`; direct eval row `33` was submitted as `9757885_[33]`.
+- L40S `shortcut_residual_flow_wm + gaussian` timed out at `4.75M`; stale eval dependency `9702347_[32]` was cancelled, training was resubmitted as `9757886_[3]`, and new dependent eval row `32` was submitted as `9757927_[32]`.
+- A100 `ot_cfm_residual_wm + gaussian` is still running and has advanced to `4.00M`; no duplicate was submitted.
+- Checked stderr logs show no Python traceback, missing data error, or CUDA OOM; interruptions are Slurm preemption/time-limit only.

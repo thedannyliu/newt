@@ -157,6 +157,39 @@ Continuation submissions:
 
 The L40S initial jobs were left running and were not duplicated.
 
+## 2026-06-09 16:57 EDT Monitoring
+
+Current subset20 status:
+
+- H200 continuation `9747574_[0-3]` is running all four cells.
+- H100 continuation `9747575_0` and `9747575_1` are running; `9747575_[2-3]` remains pending.
+- A100 continuation `9747577_[0-3]` remains pending.
+- Initial L40S `9703781_1` and `9703781_2` are still running.
+- Initial L40S `9703781_0` and `9703781_3` were preempted.
+
+Latest checkpoint progress:
+
+| Run | Latest checkpoint | Latest full checkpoint |
+| --- | ---: | ---: |
+| H200 `mlp + gaussian` | 2.50M | 2.50M |
+| H200 `mlp + flow` | 2.00M | 2.00M |
+| H200 `residual_flow + gaussian` | 1.25M | 1.00M |
+| H200 `residual_mean_flow_wm + gaussian` | 2.00M | 2.00M |
+| H100 `mlp + gaussian` | 4.25M | 4.00M |
+| H100 `mlp + flow` | 3.00M | 3.00M |
+| H100 `residual_flow + gaussian` | 1.50M | 1.50M |
+| H100 `residual_mean_flow_wm + gaussian` | 4.00M | 4.00M |
+| A100 `mlp + gaussian` | 3.75M | 3.50M |
+| A100 `mlp + flow` | 2.25M | 2.00M |
+| A100 `residual_flow + gaussian` | 1.75M | 1.50M |
+| A100 `residual_mean_flow_wm + gaussian` | 2.25M | 2.00M |
+| L40S `mlp + gaussian` | 3.00M | 3.00M |
+| L40S `mlp + flow` | 2.50M | 2.50M |
+| L40S `residual_flow + gaussian` | 1.75M | 1.50M |
+| L40S `residual_mean_flow_wm + gaussian` | 1.25M | 1.00M |
+
+No Python traceback, missing data error, or CUDA OOM was found in the checked stderr logs.
+
 ## Success Criteria
 
 Primary metric:
