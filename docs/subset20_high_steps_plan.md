@@ -86,6 +86,32 @@ Defaults:
 
 The first submissions should run the same four cells across suitable GPU partitions with distinct `RUN_TAG`s so outputs and W&B runs cannot race.
 
+## Initial Submissions
+
+Submitted on 2026-06-09 with `qos=embers`, W&B entity `danny010324`, project `newt-flow-2x2`, group `subset20-10m-highsteps`, and `REPLAY_CHECKPOINT_FREQ=500000`.
+
+| Job | Partition | Array | Run tag | Batch size | Status at submission check |
+| ---: | --- | --- | --- | ---: | --- |
+| `9703778` | `gpu-h200` | `0-3` | `h200-r1` | 1024 | pending, `Priority` |
+| `9703779` | `gpu-h100` | `0-3` | `h100-r1` | 1024 | pending, `Priority` |
+| `9703780` | `gpu-a100` | `0-3` | `a100-r1` | 1024 | pending, `Priority` |
+| `9703781` | `gpu-l40s` | `0-3` | `l40s-r1` | 512 | pending, `Priority` |
+
+Array mapping:
+
+| Array | World model | Policy |
+| ---: | --- | --- |
+| 0 | `mlp` | `gaussian` |
+| 1 | `mlp` | `flow` |
+| 2 | `residual_flow` | `gaussian` |
+| 3 | `residual_mean_flow_wm` | `gaussian` |
+
+Submission validation before queuing:
+
+- `python -m json.tool configs/task_subsets/mmbench_balanced_20.json`
+- `bash -n scripts/slurm_flow_subset20_10m.sbatch`
+- Demo file existence check for all 20 tasks.
+
 ## Success Criteria
 
 Primary metric:
