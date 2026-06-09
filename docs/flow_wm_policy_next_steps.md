@@ -616,3 +616,19 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 - Next action:
   - Watch H100 `ot_cfm_residual_wm` first; it should be the next new-flow WM to reach 5M and trigger eval row `27`.
   - Keep the resubmitted preempted jobs pending/running; they should resume from the latest full checkpoints where available.
+
+2026-06-08 20:59 EDT monitoring and repair:
+
+- Completed/evaluated:
+  - H100 `residual_mean_flow_wm + gaussian` completed 5M and eval row `25` finished as job `9671690_25`.
+  - Eval avg_score: `0.24538`. This is better than H200 `residual_mean_flow_wm` (`0.2248`), but still below the best plain residual-flow WM result (`0.2558`) and below all MLP-WM baselines.
+- New 5M checkpoint:
+  - H100 `ot_cfm_residual_wm + gaussian` wrote `5_000_000_full.pt`.
+  - Its original dependent eval `9671692_[27]` became `DependencyNeverSatisfied` because the training job ended non-afterok despite writing the 5M checkpoint. Since the checkpoint exists, eval row `27` was submitted directly as `9681885_27` and is running.
+- Preemption/repair:
+  - H200 `shortcut_residual_flow_wm` was preempted at about 3.0M. Stale eval `9671688_[23]` was cancelled, training was resubmitted as `9681888_3`, and new dependent eval row `23` was submitted as `9681921_[23]`.
+  - H100 `shortcut_residual_flow_wm` was preempted at about 4.25M. Stale eval `9671691_[26]` was cancelled, training was resubmitted as `9681886_3`, and new dependent eval row `26` was submitted as `9681923_[26]`.
+- Current running/pending after repair:
+  - Running eval: `9681885_27` for H100 `ot_cfm_residual_wm`.
+  - Running training: `9681886_3` H100 shortcut, `9652347_4` H200 OT-CFM, `9676846_2` A100 residual_mean, `9652349_[3-4]` A100 shortcut/OT-CFM, `9676843_2` L40S residual_mean, `9676844_3` L40S flow+flow, and `9652350_[3-4]` L40S shortcut/OT-CFM.
+  - Pending training: `9681888_3` H200 shortcut, waiting for H200 resources.
