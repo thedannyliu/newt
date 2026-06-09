@@ -112,6 +112,14 @@ Submission validation before queuing:
 - `bash -n scripts/slurm_flow_subset20_10m.sbatch`
 - Demo file existence check for all 20 tasks.
 
+Startup check:
+
+- A100 job `9703780_0` started first.
+- It loaded the intended 20 tasks and 440 demonstration episodes.
+- It entered the original Newt demonstration pretraining path with `demo_steps=50000`.
+- The run reports `Steps: 10,000,000`, `World size: 1`, and run name `subset20-10m-a100-r1_wm-mlp_pi-gaussian_seed-1`.
+- No Python traceback, missing data error, or CUDA OOM appeared at startup.
+
 ## Success Criteria
 
 Primary metric:
