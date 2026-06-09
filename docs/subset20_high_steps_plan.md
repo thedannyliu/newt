@@ -225,6 +225,7 @@ Early conclusion:
 Operational action:
 
 - Submitted L40S continuation job `9760035_[0,1,3]` for the preempted subset20 cells only. Array `2` was still running, so it was not duplicated.
+- After L40S array `9703781_2` reached the 8-hour `embers` limit and was marked preempted, submitted array `2` continuation as job `9760175_[2]`.
 
 ## Success Criteria
 
