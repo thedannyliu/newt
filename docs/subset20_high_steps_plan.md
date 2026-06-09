@@ -190,6 +190,42 @@ Latest checkpoint progress:
 
 No Python traceback, missing data error, or CUDA OOM was found in the checked stderr logs.
 
+## 2026-06-09 17:30 EDT Quick Result Check
+
+The training-internal eval rows already provide a useful early answer before the 10M target is reached.
+
+Latest subset20 eval snapshot:
+
+| Run | Eval step | `avg_score` | Interpretation |
+| --- | ---: | ---: | --- |
+| H200 `mlp + flow` | 2.4M | 0.49539 | Strong early cell. |
+| H200 `mlp + gaussian` | 2.8M | 0.48470 | Strong original-style baseline. |
+| H200 `residual_flow + gaussian` | 1.6M | 0.29604 | Still behind MLP WM. |
+| H200 `residual_mean_flow_wm + gaussian` | 2.2M | 0.35676 | Better than plain residual flow here, but still behind MLP WM. |
+| H100 `mlp + flow` | 3.2M | 0.46716 | Strong early cell. |
+| H100 `mlp + gaussian` | 4.4M | 0.46468 | Strong original-style baseline. |
+| H100 `residual_flow + gaussian` | 1.6M | 0.34264 | Best plain residual-flow snapshot so far. |
+| H100 `residual_mean_flow_wm + gaussian` | 4.0M | 0.37050 | Improved over 40-task new-flow eval, but still below MLP WM. |
+| A100 `mlp + flow` | 2.4M | 0.52114 | Best current subset20 eval. |
+| A100 `mlp + gaussian` | 3.8M | 0.43019 | Strong but noisy. |
+| A100 `residual_flow + gaussian` | 1.8M | 0.27400 | Still behind MLP WM. |
+| A100 `residual_mean_flow_wm + gaussian` | 2.4M | 0.35244 | Better than 40-task new-flow eval, still below MLP WM. |
+| L40S `mlp + flow` | 2.6M | 0.45579 | Strong early cell. |
+| L40S `mlp + gaussian` | 2.8M | 0.42660 | Strong original-style baseline. |
+| L40S `residual_flow + gaussian` | 2.0M | 0.29991 | Still behind MLP WM. |
+| L40S `residual_mean_flow_wm + gaussian` | 1.4M | 0.33967 | Better than early residual flow, still below MLP WM. |
+
+Early conclusion:
+
+- The reduced-task, higher-step direction matches the original hypothesis: the same pipeline gets much stronger learning signal than the 40-task/5M setting, reaching roughly 0.43-0.52 for MLP WM cells before 5M.
+- The architecture ranking has not flipped: MLP WM remains clearly stronger than flow WM variants.
+- `residual_mean_flow_wm` is the most promising flow-WM cell in this subset20 setting, but the gap to MLP WM is still large enough that it should be treated as a secondary candidate, not the main path.
+- `mlp + flow policy` remains competitive or best on subset20, but its value needs to be weighed against action-time overhead.
+
+Operational action:
+
+- Submitted L40S continuation job `9760035_[0,1,3]` for the preempted subset20 cells only. Array `2` was still running, so it was not duplicated.
+
 ## Success Criteria
 
 Primary metric:
