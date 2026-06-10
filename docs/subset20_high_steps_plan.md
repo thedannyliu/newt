@@ -527,6 +527,55 @@ Current read:
 - L40S `mlp + flow` reached the strongest latest-step local score so far at `0.58263` at 7.6M eval, but still needs continuation to 10M.
 - Flow-WM cells remain behind MLP-WM cells; H200 `residual_mean_flow_wm + gaussian` improved to `0.44473` at 7.2M but does not close the gap.
 
+## 2026-06-10 17:04 EDT Monitoring and Continuation
+
+Queue check:
+
+- Running:
+  - `9796335_0`: A100 `mlp + gaussian`
+  - `9796334_1`: H100 `mlp + flow`
+  - `9796334_2`: H100 `residual_flow + gaussian`
+  - `9796334_3`: H100 `residual_mean_flow_wm + gaussian`
+- Pending:
+  - `9796333_[0-2]`: H200 `mlp + gaussian`, `mlp + flow`, and `residual_flow + gaussian`
+  - `9797383_[3]`: H200 `residual_mean_flow_wm + gaussian`
+  - `9796335_[1-3]`: A100 `mlp + flow`, `residual_flow + gaussian`, and `residual_mean_flow_wm + gaussian`
+  - `9797385_[1]`: L40S `mlp + flow`
+
+Stopped since the previous check:
+
+- `9779361_2`: L40S `residual_flow + gaussian`, preempted after reaching 5.90M train / 5.80M eval.
+- `9779361_3`: L40S `residual_mean_flow_wm + gaussian`, preempted after reaching 6.74M train / 6.60M eval.
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Checkpoint | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 10.0M full | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 10.0M full | complete |
+| H200 `mlp + flow` | 9.06M | 9.0M | 0.58255 | 9.0M full | pending continuation |
+| L40S `mlp + flow` | 7.78M | 7.6M | 0.58263 | 7.5M full | pending continuation |
+| H100 `mlp + flow` | 8.42M | 8.4M | 0.54411 | 8.0M full | running |
+| A100 `mlp + flow` | 6.5M | 6.4M | 0.55556 | 6.5M full | pending continuation |
+| A100 `mlp + gaussian` | 7.78M | 7.6M | 0.45290 | 7.5M full | running |
+| H100 `residual_flow + gaussian` | 6.28M | 6.2M | 0.40176 | 6.0M full | running |
+| H100 `residual_mean_flow_wm + gaussian` | 9.84M | 9.8M | 0.42021 | 9.5M full | running |
+| H200 `residual_mean_flow_wm + gaussian` | 7.24M | 7.2M | 0.44473 | 7.0M full | pending continuation |
+| L40S `residual_flow + gaussian` | 5.90M | 5.8M | 0.46335 | 5.5M full | resubmitted |
+| L40S `residual_mean_flow_wm + gaussian` | 6.74M | 6.6M | 0.37317 | 6.5M full | resubmitted |
+
+Repair submission:
+
+| Job | Partition | Array | Run tag | Cells |
+| ---: | --- | --- | --- | --- |
+| `9798924` | `gpu-l40s` | `2-3` | `l40s-r1` | `residual_flow + gaussian`, `residual_mean_flow_wm + gaussian` |
+
+Current read:
+
+- H100 continuations are making progress; `mlp + flow` remains strong but its latest-step score dipped to `0.54411` while the peak remains `0.58825`.
+- L40S `residual_flow + gaussian` improved to `0.46335`, making it the strongest current flow-WM latest-step L40S result, but it is still below MLP-WM latest/peak scores.
+- No new code/data failure was found; stopped L40S jobs were preemptions and were resubmitted from checkpoints.
+
 ## Success Criteria
 
 Primary metric:
