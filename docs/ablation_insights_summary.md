@@ -10,6 +10,18 @@ Source metrics:
 
 Important caveat: `mean +/- std` below is over completed local runs across GPU/replicate labels, not over independent random seeds unless explicitly stated.
 
+## Key Results
+
+| Experiment name | # Tasks | Budget / protocol | WM | Policy | Eval step | Avg_score | Peak_score | Notes |
+| --- | ---: | --- | --- | --- | ---: | ---: | ---: | --- |
+| Official Newt paper | 200 | 100M total, state obs | Newt MLP WM | Gaussian prior + MPC | 100M | 0.438 | n/a | Official full MMBench reference. |
+| Official Newt paper | 200 | 20M total, state obs | Newt MLP WM | Gaussian prior + MPC | 20M | 0.310 | n/a | Official early reference. |
+| Official TD-MPC2 single-task | 200 | 1B total across 200 single-task agents | MLP WM | Gaussian + MPC | 1B | 0.800 | n/a | Upper reference, not a multitask agent. |
+| Our subset40 best completed 2x2 | 40 | 5M + 50k demo | MLP WM | Flow policy | 5M | 0.321 +/- 0.012 | 0.339 | Mean +/- std over 4 completed runs; best single run 0.339. Best completed 2x2 architecture. |
+| Our subset40 best flow-WM | 40 | 5M + 50k demo | Residual_flow WM | Gaussian | 5M | 0.232 +/- 0.027 | 0.256 | Mean +/- std over 4 completed runs; best single run 0.256. Best flow-WM variant, still below MLP WM. |
+| Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 7.2M-9.0M current | 0.519-0.583 | 0.588 | Best current architecture signal; runs are still active/resubmitted across H100/H200/A100/L40S. |
+| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 4.8M-7.0M current | 0.400-0.463 | 0.511 | Flow-WM improves with more steps, but remains below MLP WM. H100 residual_flow has the strongest flow-WM peak so far. |
+
 ## Architecture Ablation
 
 ### WM x Policy 2x2
@@ -77,18 +89,24 @@ Conclusion:
 
 ## Compute / Runtime Ablation
 
-Protocol: subset20 high-step runs. Scores are current latest/peak local metrics; not all rows are complete at 10M.
+Protocol: subset20 high-step runs on **H100 only**. This avoids mixing architecture effects with H100/H200/A100/L40S runtime differences. Scores are current latest/peak local metrics; not all rows are complete at 10M.
 
-| Architecture | Runs | Current avg_score mean | Peak score | Mean action_time | Mean update_time | Compute read |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| MLP + flow policy | 4 | 0.579 +/- 0.009 | 0.588 | 0.083s | 0.053s | Best score signal, but action selection is slower than Gaussian. |
-| MLP + Gaussian | 4 | 0.497 +/- 0.035 | 0.591 | 0.049s | 0.043s | Fastest strong baseline; best completed 10M row is 0.538. |
-| residual_flow + Gaussian | 4 | 0.431 +/- 0.029 | 0.511 | 0.115s | 0.056s | Slower than MLP+flow and lower score; currently not Pareto-efficient. |
-| residual_mean_flow_wm + Gaussian | 4 | 0.425 +/- 0.052 | 0.492 | 0.068s | 0.050s | Cheaper than residual_flow but lower score. |
+Definitions:
+
+- `mean action_time`: average logged time to select/plan one environment action at the latest train step.
+- `mean update_time`: average logged optimizer/world-model update time per update at the latest train step.
+- `mean eval time`: log-derived estimate from `eval.elapsed_time - previous train.elapsed_time`; useful for relative comparison, but not a profiler-grade measurement.
+
+| Architecture | H100 eval step | Current avg_score | Peak score | Mean action_time | Mean update_time | Mean eval time | Compute read |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| MLP + flow policy | 9.0M | 0.565 | 0.588 | 0.060s | 0.046s | 87.6s | Best current score signal, but action planning is slower than Gaussian. |
+| MLP + Gaussian | 10.0M | 0.538 | 0.591 | 0.035s | 0.038s | 61.7s | Original Newt setting; fastest strong baseline on H100. |
+| residual_flow + Gaussian | 7.0M | 0.410 | 0.511 | 0.076s | 0.052s | 103.3s | Slower and lower score than MLP choices; currently not Pareto-efficient. |
+| residual_mean_flow_wm + Gaussian | 10.0M | 0.489 | 0.492 | 0.049s | 0.048s | 71.8s | Cheaper than residual_flow but still below MLP WM. |
 
 Figure:
 
-![Subset20 compute vs score](assets/ablation_insights_20260610/subset20_compute_vs_score.png)
+![Subset20 H100 runtime bars](assets/ablation_insights_20260610/subset20_h100_runtime_bars.png)
 
 Conclusion:
 
@@ -98,10 +116,12 @@ Conclusion:
 
 ## Training Budget / Scaling Ablation
 
+Best setting here intentionally uses the original Newt architecture, **MLP WM + Gaussian policy**, so this isolates task/step scaling from architecture changes.
+
 | Setting | Tasks | Total steps | Steps per task | Score | Interpretation |
 | --- | ---: | ---: | ---: | ---: | --- |
-| subset40 5M best architecture | 40 | 5M | 125k | 0.321 | Useful early architecture screen, but per-task interaction is low. |
-| subset20 10M best completed | 20 | 10M | 500k | 0.538 | Stronger learning signal; same per-task budget as official 100M/200-task. |
+| subset40 5M MLP+Gaussian | 40 | 5M | 125k | 0.291 | Original setting short-run baseline; per-task interaction is low. |
+| subset20 10M MLP+Gaussian | 20 | 10M | 500k | 0.538 | Original setting; same per-task budget as official 100M/200-task. |
 | Official Newt 20M | 200 | 20M | 100k | 0.310 | Official early 200-task reference. |
 | Official Newt 100M | 200 | 100M | 500k | 0.438 | Official full 200-task reference. |
 
@@ -109,9 +129,9 @@ Figure:
 
 ![Scaling by steps per task](assets/ablation_insights_20260610/scaling_steps_per_task.png)
 
-Subset20 high-step training curves:
+Subset20 high-step training curves, H100 only:
 
-![Subset20 training curves](assets/ablation_insights_20260610/subset20_highstep_training_curves.png)
+![Subset20 H100 training curves](assets/ablation_insights_20260610/subset20_h100_training_curves.png)
 
 Conclusion:
 
@@ -149,6 +169,7 @@ Tables:
 - `docs/assets/ablation_insights_20260610/subset40_flow_wm_variants_summary.csv`
 - `docs/assets/ablation_insights_20260610/subset20_highstep_summary.csv`
 - `docs/assets/ablation_insights_20260610/subset20_runs.csv`
+- `docs/assets/ablation_insights_20260610/subset20_h100_runtime_summary.csv`
 - `docs/assets/ablation_insights_20260610/subset40_flowsteps_summary.csv`
 - `docs/assets/ablation_insights_20260610/scaling_summary.csv`
 
@@ -159,5 +180,7 @@ Figures:
 - `docs/assets/ablation_insights_20260610/subset40_flow_wm_variants.png`
 - `docs/assets/ablation_insights_20260610/subset40_flow_wm_variants_training_curves.png`
 - `docs/assets/ablation_insights_20260610/subset20_highstep_training_curves.png`
+- `docs/assets/ablation_insights_20260610/subset20_h100_training_curves.png`
+- `docs/assets/ablation_insights_20260610/subset20_h100_runtime_bars.png`
 - `docs/assets/ablation_insights_20260610/subset20_compute_vs_score.png`
 - `docs/assets/ablation_insights_20260610/scaling_steps_per_task.png`

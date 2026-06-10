@@ -94,6 +94,15 @@ def run_summary(path: Path, meta: dict) -> dict:
 	records = read_jsonl(path / "metrics.jsonl")
 	evals = dedup_eval_curve(records)
 	trains = [r for r in records if r.get("category") == "train" and "step" in r]
+	eval_durations = []
+	prev = None
+	for rec in records:
+		if rec.get("category") == "eval" and prev and prev.get("category") == "train":
+			delta = rec.get("elapsed_time", 0) - prev.get("elapsed_time", 0)
+			# Ignore resume resets and first-eval outliers; normal subset evals are ~1 minute.
+			if 0 < delta < 600:
+				eval_durations.append(float(delta))
+		prev = rec
 	latest_eval = max(evals, key=lambda r: r.get("step", -1), default={})
 	best_eval = max(evals, key=lambda r: r.get("avg_score", r.get("episode_score", -1)), default={})
 	max_train = max(trains, key=lambda r: r.get("step", -1), default={})
@@ -110,6 +119,8 @@ def run_summary(path: Path, meta: dict) -> dict:
 		"update_time": max_train.get("update_time"),
 		"steps_per_second": max_train.get("steps_per_second"),
 		"elapsed_time_hours": (max_train.get("elapsed_time") / 3600.0) if max_train.get("elapsed_time") else None,
+		"eval_time_mean_s": mean(eval_durations) if eval_durations else None,
+		"eval_time_last_s": eval_durations[-1] if eval_durations else None,
 		"curve": [(int(r["step"]), float(r.get("avg_score", r.get("episode_score")))) for r in evals],
 	}
 
@@ -276,6 +287,32 @@ def plot_compute_scatter(rows: list[dict], out: Path) -> None:
 	plt.close(fig)
 
 
+def plot_runtime_bars(rows: list[dict], out: Path) -> None:
+	rows = sorted(rows, key=lambda r: (r["wm"], r["policy"]))
+	labels = [f"{r['wm']}\n+{r['policy']}" for r in rows]
+	xs = range(len(rows))
+	fig, axes = plt.subplots(1, 2, figsize=(12, 4.8))
+	axes[0].bar([x - 0.18 for x in xs], [r.get("action_time") or 0 for r in rows], width=0.36, label="action_time")
+	axes[0].bar([x + 0.18 for x in xs], [r.get("update_time") or 0 for r in rows], width=0.36, label="update_time")
+	axes[0].set_xticks(list(xs), labels, fontsize=8)
+	axes[0].set_ylabel("Seconds")
+	axes[0].set_title("H100 per-step runtime metrics")
+	axes[0].legend()
+	axes[0].grid(axis="y", alpha=0.25)
+
+	axes[1].bar(xs, [r.get("eval_time_mean_s") or 0 for r in rows], color="#6f9fd8")
+	axes[1].set_xticks(list(xs), labels, fontsize=8)
+	axes[1].set_ylabel("Seconds per eval")
+	axes[1].set_title("H100 mean 20-task eval time")
+	axes[1].grid(axis="y", alpha=0.25)
+	for i, r in enumerate(rows):
+		if r.get("eval_time_mean_s"):
+			axes[1].text(i, r["eval_time_mean_s"] + 1, f"{r['eval_time_mean_s']:.0f}s", ha="center", fontsize=8)
+	fig.tight_layout()
+	fig.savefig(out, dpi=180)
+	plt.close(fig)
+
+
 def main() -> None:
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--out-dir", default="docs/assets/ablation_insights_20260610")
@@ -301,6 +338,9 @@ def main() -> None:
 	write_csv(out_dir / "subset20_highstep_summary.csv", subset20_summary, ["wm", "policy", "n", "final_mean", "final_std", "peak_max", "peak_mean", "action_time_mean", "update_time_mean", "sps_mean", "est_hours_to_10m", "best_run"])
 	write_csv(out_dir / "subset20_runs.csv", subset20, ["gpu", "wm", "policy", "train_step", "eval_step", "final_score", "peak_step", "peak_score", "action_time", "update_time", "steps_per_second", "elapsed_time_hours", "name", "path"])
 	write_csv(out_dir / "subset40_flowsteps_summary.csv", flowsteps_summary, ["flow_steps", "wm", "policy", "n", "final_mean", "final_std", "peak_max", "action_time_mean", "update_time_mean", "sps_mean", "best_run"])
+
+	h100_subset20 = [r for r in subset20 if r["gpu"] == "h100-r1"]
+	write_csv(out_dir / "subset20_h100_runtime_summary.csv", h100_subset20, ["gpu", "wm", "policy", "train_step", "eval_step", "final_score", "peak_step", "peak_score", "action_time", "update_time", "steps_per_second", "eval_time_mean_s", "eval_time_last_s", "elapsed_time_hours", "name"])
 
 	plot_2x2_heatmap(two_by_two, out_dir / "subset40_2x2_heatmap.png")
 	plot_bar(wm_variants, out_dir / "subset40_flow_wm_variants.png", "Subset40 5M Flow-WM variants: final avg_score")
@@ -336,10 +376,16 @@ def main() -> None:
 			curve_groups_20[f"{run['wm']}+{run['policy']}"].append(run)
 	plot_curves(curve_groups_20, out_dir / "subset20_highstep_training_curves.png", "Subset20 10M high-step training curves")
 	plot_compute_scatter(subset20, out_dir / "subset20_compute_vs_score.png")
+	curve_groups_20_h100 = defaultdict(list)
+	for run in h100_subset20:
+		if (run["wm"], run["policy"]) in keep20:
+			curve_groups_20_h100[f"{run['wm']}+{run['policy']}"].append(run)
+	plot_curves(curve_groups_20_h100, out_dir / "subset20_h100_training_curves.png", "Subset20 H100 training curves")
+	plot_runtime_bars(h100_subset20, out_dir / "subset20_h100_runtime_bars.png")
 
 	scaling_rows = [
-		{"setting": "subset40 5M", "tasks": 40, "steps_m": 5, "steps_per_task_k": 125, "score": max(r["final_mean"] for r in two_by_two)},
-		{"setting": "subset20 10M best completed", "tasks": 20, "steps_m": 10, "steps_per_task_k": 500, "score": max(r["final_score"] for r in subset20 if r["eval_step"] >= 10_000_000)},
+		{"setting": "subset40 5M MLP+Gaussian", "tasks": 40, "steps_m": 5, "steps_per_task_k": 125, "score": next(r["final_mean"] for r in two_by_two if r["wm"] == "mlp" and r["policy"] == "gaussian")},
+		{"setting": "subset20 10M MLP+Gaussian", "tasks": 20, "steps_m": 10, "steps_per_task_k": 500, "score": max(r["final_score"] for r in subset20 if r["wm"] == "mlp" and r["policy"] == "gaussian" and r["eval_step"] >= 10_000_000)},
 		{"setting": "official 200 20M", "tasks": 200, "steps_m": 20, "steps_per_task_k": 100, "score": 0.31},
 		{"setting": "official 200 100M", "tasks": 200, "steps_m": 100, "steps_per_task_k": 500, "score": 0.438},
 	]

@@ -1,5 +1,5 @@
 setting,tasks,steps_m,steps_per_task_k,score
-subset40 5M,40,5,125,0.3210702302966456
-subset20 10M best completed,20,10,500,0.5381618663808331
+subset40 5M MLP+Gaussian,40,5,125,0.2907186027287389
+subset20 10M MLP+Gaussian,20,10,500,0.5381618663808331
 official 200 20M,200,20,100,0.31
 official 200 100M,200,100,500,0.438
