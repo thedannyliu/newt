@@ -227,6 +227,43 @@ Operational action:
 - Submitted L40S continuation job `9760035_[0,1,3]` for the preempted subset20 cells only. Array `2` was still running, so it was not duplicated.
 - After L40S array `9703781_2` reached the 8-hour `embers` limit and was marked preempted, submitted array `2` continuation as job `9760175_[2]`.
 
+## 2026-06-09 20:06 EDT Monitoring
+
+Current queue state:
+
+- H200 continuation `9747574_[0-3]` is running all four cells.
+- H100 continuation `9747575_[0-3]` is running all four cells.
+- A100 continuation `9747577_[0-3]` is running all four cells.
+- L40S continuation `9760035_[0,1,3]` and `9760175_[2]` are running all four cells.
+- No Python traceback, missing data error, or CUDA OOM was found in the checked logs; interruptions remain Slurm preemption/time-limit only.
+
+Latest subset20 snapshot:
+
+| Run | Train step | Latest eval step | Latest eval `avg_score` | Notes |
+| --- | ---: | ---: | ---: | --- |
+| H100 `mlp + flow` | 4.38M | 4.20M | 0.52156 | Current strongest eval. |
+| H100 `mlp + gaussian` | 5.86M | 5.80M | 0.51572 | Strongest original-style baseline. |
+| H100 `residual_flow + gaussian` | 2.56M | 2.40M | 0.42300 | Best flow-WM snapshot so far, but at fewer steps. |
+| H100 `residual_mean_flow_wm + gaussian` | 5.34M | 5.20M | 0.34056 | Not closing the MLP gap at comparable steps. |
+| H200 `mlp + flow` | 3.90M | 3.80M | 0.41414 | Below H100/A100 replicate so far. |
+| H200 `mlp + gaussian` | 5.00M | 5.00M | 0.42347 | Continuing toward 10M. |
+| H200 `residual_flow + gaussian` | 2.90M | 2.80M | 0.41988 | Competitive with H200 MLP eval at this early checkpoint. |
+| H200 `residual_mean_flow_wm + gaussian` | 4.00M | 4.00M | 0.32699 | Behind MLP/residual_flow. |
+| A100 `mlp + flow` | 2.40M | 2.40M | 0.47109 | Strong early cell. |
+| A100 `mlp + gaussian` | 4.42M | 4.40M | 0.45273 | Strong baseline. |
+| A100 `residual_flow + gaussian` | 1.82M | 1.80M | 0.31001 | Still early. |
+| A100 `residual_mean_flow_wm + gaussian` | 2.30M | 2.20M | 0.31782 | Still early and behind MLP. |
+| L40S `mlp + flow` | 3.40M | 3.20M | 0.47116 | Strong early cell. |
+| L40S `mlp + gaussian` | 4.28M | 4.20M | 0.44272 | Strong baseline. |
+| L40S `residual_flow + gaussian` | 2.52M | 2.40M | 0.31528 | Behind MLP. |
+| L40S `residual_mean_flow_wm + gaussian` | 1.98M | 1.80M | 0.28558 | Behind MLP. |
+
+Current read:
+
+- The subset20 high-step run continues to support the reduced-task/high-step hypothesis: MLP-WM cells are already around 0.44-0.52 before 10M.
+- Flow-WM ranking is mixed: `residual_flow` has the best subset20 flow-WM snapshot so far, while `residual_mean_flow_wm` is not improving enough at comparable steps.
+- The main conclusion remains unchanged until 10M evals: keep running, but MLP WM is still the reference path to beat.
+
 ## Success Criteria
 
 Primary metric:

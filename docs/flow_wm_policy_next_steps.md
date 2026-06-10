@@ -712,3 +712,21 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
 - L40S `shortcut_residual_flow_wm + gaussian` timed out at `4.75M`; stale eval dependency `9702347_[32]` was cancelled, training was resubmitted as `9757886_[3]`, and new dependent eval row `32` was submitted as `9757927_[32]`.
 - A100 `ot_cfm_residual_wm + gaussian` is still running and has advanced to `4.00M`; no duplicate was submitted.
 - Checked stderr logs show no Python traceback, missing data error, or CUDA OOM; interruptions are Slurm preemption/time-limit only.
+
+2026-06-09 20:06 EDT monitoring and continuation:
+
+- New completed evals:
+
+| Run | Eval job | Eval avg_score | Notes |
+| --- | ---: | ---: | --- |
+| H200 `shortcut_residual_flow_wm + gaussian` | `9747543_23` | 0.23225 | Similar to H200 OT-CFM and below residual_mean/shortcut H100/A100. |
+| A100 `shortcut_residual_flow_wm + gaussian` | `9757888_29` | 0.24545 | Best shortcut replicate so far, roughly tied with H100 residual_mean. |
+| L40S `ot_cfm_residual_wm + gaussian` | `9757885_33` | 0.22143 | Below H100/H200 OT-CFM and below residual variants. |
+
+- L40S `shortcut_residual_flow_wm + gaussian` resumed as `9757886_3`, reached `5_000_000_full.pt`, and completed training. Its in-training 4.8M eval was `avg_score=0.237`.
+- The dependent eval `9757927_[32]` became `DependencyNeverSatisfied` even though the 5M checkpoint exists. It was cancelled and direct eval row `32` was submitted as `9764791_[32]` with `EVAL_TAG=20260609d`.
+- Current new-flow conclusion is unchanged:
+  - Best new variant so far: A100 `shortcut_residual_flow_wm` at 0.24545, essentially tied with H100 `residual_mean_flow_wm` at 0.24538.
+  - Best plain residual-flow WM remains better at 0.25576.
+  - OT-CFM is consistently weaker, around 0.221-0.232.
+  - MLP WM remains clearly stronger than all flow-WM variants.
