@@ -414,6 +414,71 @@ Current read:
 - MLP-WM cells still dominate the subset20 run.
 - The best flow-WM signal is now H100 `residual_mean_flow_wm + gaussian` at `0.45783`, but it remains below the MLP-WM cells at comparable or higher eval steps.
 
+## 2026-06-10 14:10 EDT Monitoring and Continuation
+
+Current queue before repair:
+
+- Running:
+  - `9779356_3`: H200 `residual_mean_flow_wm + gaussian`
+  - `9781549_0`: L40S `mlp + gaussian`
+  - `9779361_[1-3]`: L40S `mlp + flow`, `residual_flow + gaussian`, and `residual_mean_flow_wm + gaussian`
+- Stopped:
+  - H200 arrays `0-2` were preempted.
+  - H100 arrays `0-3` stopped; array `0` reached the 10M target and should not be resubmitted.
+  - A100 arrays `0-3` were preempted or timed out.
+
+Checked recent stderr logs show Slurm preemption/time-limit only; no Python traceback, missing data error, or CUDA OOM was found.
+
+Highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Status |
+| --- | ---: | ---: | ---: | --- |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | complete |
+| H200 `mlp + flow` | 9.06M | 9.0M | 0.58255 | resubmitted |
+| H100 `mlp + flow` | 7.8M | 7.8M | 0.57361 | resubmitted |
+| A100 `mlp + flow` | 6.5M | 6.4M | 0.55556 | resubmitted |
+| L40S `mlp + flow` | 7.54M | 7.4M | 0.54459 | running |
+| L40S `mlp + gaussian` | 9.90M | 9.8M | 0.48712 | running, near target |
+| H200 `mlp + gaussian` | 8.54M | 8.4M | 0.45496 | resubmitted |
+| A100 `mlp + gaussian` | 6.5M | 6.4M | 0.45485 | resubmitted |
+| H100 `residual_mean_flow_wm + gaussian` | 9.22M | 9.2M | 0.43459 | resubmitted |
+| L40S `residual_flow + gaussian` | 5.48M | 5.4M | 0.42921 | running |
+| A100 `residual_mean_flow_wm + gaussian` | 5.62M | 5.6M | 0.36085 | resubmitted |
+| A100 `residual_flow + gaussian` | 4.94M | 4.8M | 0.41356 | resubmitted |
+| H200 `residual_flow + gaussian` | 6.12M | 6.0M | 0.40036 | resubmitted |
+| H200 `residual_mean_flow_wm + gaussian` | 7.10M | 7.0M | 0.39461 | running |
+| L40S `residual_mean_flow_wm + gaussian` | 6.18M | 6.0M | 0.32281 | running |
+| H100 `residual_flow + gaussian` | 5.74M | 5.6M | 0.43162 | resubmitted |
+
+Repair submissions:
+
+| Job | Partition | Array | Run tag | Cells |
+| ---: | --- | --- | --- | --- |
+| `9796333` | `gpu-h200` | `0-2` | `h200-r1` | inactive H200 cells; array `3` still running |
+| `9796334` | `gpu-h100` | `1-3` | `h100-r1` | inactive incomplete H100 cells; array `0` already reached 10M |
+| `9796335` | `gpu-a100` | `0-3` | `a100-r1` | all inactive A100 cells |
+
+Queue after repair:
+
+- Running:
+  - `9779356_3`: H200 `residual_mean_flow_wm + gaussian`
+  - `9781549_0`: L40S `mlp + gaussian`
+  - `9779361_1`: L40S `mlp + flow`
+  - `9779361_2`: L40S `residual_flow + gaussian`
+  - `9779361_3`: L40S `residual_mean_flow_wm + gaussian`
+  - `9796335_0`: A100 `mlp + gaussian`
+- Pending:
+  - `9796333_[0-2]`: H200 incomplete cells
+  - `9796334_[1-3]`: H100 incomplete cells
+  - `9796335_[1-3]`: A100 incomplete cells
+
+Current read:
+
+- First 10M cell is complete: H100 `mlp + gaussian` reached `avg_score=0.53816`.
+- Peak observed subset20 scores are still MLP-WM cells, led by H200/H100/A100 `mlp + flow`.
+- Flow-WM cells improved with longer training but remain below the strongest MLP-WM cells.
+- L40S `mlp + gaussian` is very close to the 10M target; if it times out before the final checkpoint, resume from its latest full checkpoint.
+
 ## Success Criteria
 
 Primary metric:
