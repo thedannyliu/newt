@@ -20,12 +20,14 @@ Protocol: subset40, 5M online steps, 50k demo pretraining, state observations, c
 | --- | --- | ---: | ---: | ---: | --- |
 | MLP | Flow | 4 | 0.321 +/- 0.012 | 0.339 | Best subset40 2x2 architecture. |
 | MLP | Gaussian | 4 | 0.291 +/- 0.018 | 0.308 | Strong baseline, below MLP+flow. |
-| Flow | Flow | 4 | 0.119 +/- 0.015 | 0.136 | Pure flow WM remains weak. |
-| Flow | Gaussian | 4 | 0.106 +/- 0.023 | 0.136 | Pure flow WM remains weak. |
+| Best Flow-WM example: residual_flow | Gaussian | 4 | 0.232 +/- 0.027 | 0.256 | Best flow-WM family result, but still below MLP WM. |
+| Best Flow-WM example: residual_flow | Flow | 0 | not run | not run | Missing cell; current flow-policy evidence is only with MLP WM or pure flow WM. |
 
 Figure:
 
 ![Subset40 2x2 heatmap](assets/ablation_insights_20260610/subset40_2x2_heatmap.png)
+
+The heatmap above is the literal original 2x2 with pure `flow` WM. The table uses `residual_flow` as the more informative Flow-WM example because pure flow was clearly dominated.
 
 Training curves:
 
@@ -34,7 +36,8 @@ Training curves:
 Conclusion:
 
 - The strongest signal is not replacing the world model with pure flow.
-- The best 2x2 result is **MLP WM + flow policy**, suggesting the policy prior is a better first target than fully replacing the latent dynamics.
+- The best complete 2x2 result is **MLP WM + flow policy**, suggesting the policy prior is a better first target than fully replacing the latent dynamics.
+- The best Flow-WM example so far is `residual_flow + Gaussian`, but it is still below both MLP policy variants on subset40.
 
 ### Flow-WM Variants
 
