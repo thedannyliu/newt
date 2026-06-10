@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-09 20:10 EDT
+Last updated: 2026-06-09 21:28 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -47,7 +47,7 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset40 WM variant | 40 | 5M + 50k demo | shortcut_residual_flow_wm | Gaussian | A100 | complete | 5M | 0.24545 | Best shortcut replicate. |
 | Subset40 WM variant | 40 | 5M + 50k demo | shortcut_residual_flow_wm | Gaussian | H100 | complete | 5M | 0.24033 | Comparable to residual_mean. |
 | Subset40 WM variant | 40 | 5M + 50k demo | shortcut_residual_flow_wm | Gaussian | H200 | complete | 5M | 0.23225 | Below A100/H100 shortcut. |
-| Subset40 WM variant | 40 | 5M + 50k demo | shortcut_residual_flow_wm | Gaussian | L40S | complete/pending direct eval | 4.8M train eval | 0.237 | 5M checkpoint exists; direct eval submitted as `9764791_[32]`. |
+| Subset40 WM variant | 40 | 5M + 50k demo | shortcut_residual_flow_wm | Gaussian | L40S | complete | 5M | 0.20876 | Direct eval `9764791_[32]`; weak shortcut replicate. |
 | Subset40 WM variant | 40 | 5M + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 5M | 0.24538 | Best residual_mean replicate. |
 | Subset40 WM variant | 40 | 5M + 50k demo | residual_mean_flow_wm | Gaussian | A100 | complete | 5M | 0.23934 | Below best residual_flow. |
 | Subset40 WM variant | 40 | 5M + 50k demo | residual_mean_flow_wm | Gaussian | H200 | complete | 5M | 0.22482 | Below best residual_flow. |
@@ -58,22 +58,22 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset40 WM variant | 40 | 5M + 50k demo | endpoint_flow | Gaussian | A100 | complete | 5M | 0.19807 | Endpoint flow not competitive. |
 | Subset40 WM variant | 40 | 5M + 50k demo | endpoint_flow | Gaussian | H200 | complete | 5M | 0.19475 | Endpoint flow not competitive. |
 | Subset40 WM variant | 40 | 5M + 50k demo | endpoint_flow | Gaussian | L40S | complete | 5M | 0.18724 | Endpoint flow not competitive. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H100 | running | 4.4M | 0.52198 | Current strongest local subset20 eval. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H100 | running | 5.8M | 0.51572 | Strongest original-style local baseline. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | L40S | running | 3.4M | 0.49455 | Strong MLP-WM cell. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | running | 2.4M | 0.47109 | Strong early MLP-WM cell. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | running | 4.4M | 0.45273 | Strong baseline. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | L40S | running | 4.2M | 0.44272 | Strong baseline. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | running | 5.0M | 0.42347 | Continuing toward 10M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | running | 3.8M | 0.41414 | Continuing toward 10M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | running | 2.8M | 0.41988 | Best subset20 flow-WM snapshot so far, but at fewer steps. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | running | 2.6M | 0.36128 | Behind MLP-WM cells. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | running | 2.4M | 0.31528 | Behind MLP-WM cells. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 1.8M | 0.31001 | Early. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | running | 5.4M | 0.32920 | Not closing MLP gap at comparable steps. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | running | 4.0M | 0.32699 | Behind MLP/residual_flow. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 2.2M | 0.31782 | Early. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | running | 2.0M | 0.30305 | Early. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | running | 4.6M | 0.54616 | Current strongest local subset20 eval. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H100 | running | 4.8M | 0.54557 | Strong MLP-WM cell. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | L40S | running | 3.8M | 0.52275 | Strong MLP-WM cell. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | running | 2.8M | 0.49973 | Strong early MLP-WM cell. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H100 | running | 6.6M | 0.45537 | Strong original-style baseline. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | L40S | running | 4.4M | 0.45497 | Strong baseline. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | running | 5.0M | 0.44205 | Strong baseline. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | running | 6.0M | 0.42972 | Continuing toward 10M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | running | 4.8M | 0.40596 | Best current residual_mean snapshot but still below top MLP cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | running | 3.0M | 0.39700 | Best current residual_flow snapshot. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 2.0M | 0.33476 | Early. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 2.6M | 0.33399 | Early. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | running | 3.4M | 0.32833 | Below MLP cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | running | 5.6M | 0.34291 | Not closing MLP gap at comparable steps. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | running | 2.8M | 0.32219 | Behind MLP-WM cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | running | 2.4M | 0.30593 | Early. |
 
 Current read:
 

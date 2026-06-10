@@ -264,6 +264,50 @@ Current read:
 - Flow-WM ranking is mixed: `residual_flow` has the best subset20 flow-WM snapshot so far, while `residual_mean_flow_wm` is not improving enough at comparable steps.
 - The main conclusion remains unchanged until 10M evals: keep running, but MLP WM is still the reference path to beat.
 
+## 2026-06-09 21:28 EDT Monitoring and Continuation
+
+New Slurm interruptions:
+
+- H100 array `9747575_3` was preempted; this is `residual_mean_flow_wm + gaussian`.
+- A100 array `9747577_3` was preempted; this is `residual_mean_flow_wm + gaussian`.
+- L40S array `9760035_0` was preempted; this is `mlp + gaussian`.
+- Checked stderr indicates Slurm preemption only; no Python traceback, missing data error, or CUDA OOM was found for these interruptions.
+
+Repair actions:
+
+| New job | Partition | Array | Run tag | Cell |
+| ---: | --- | ---: | --- | --- |
+| `9768054` | `gpu-h100` | `3` | `h100-r1` | `residual_mean_flow_wm + gaussian` |
+| `9768055` | `gpu-a100` | `3` | `a100-r1` | `residual_mean_flow_wm + gaussian` |
+| `9768056` | `gpu-l40s` | `0` | `l40s-r1` | `mlp + gaussian` |
+
+Latest subset20 eval snapshot:
+
+| Run | Latest eval step | Latest eval `avg_score` |
+| --- | ---: | ---: |
+| H200 `mlp + flow` | 4.6M | 0.54616 |
+| H100 `mlp + flow` | 4.8M | 0.54557 |
+| L40S `mlp + flow` | 3.8M | 0.52275 |
+| A100 `mlp + flow` | 2.8M | 0.49973 |
+| H100 `mlp + gaussian` | 6.6M | 0.45537 |
+| L40S `mlp + gaussian` | 4.4M | 0.45497 |
+| A100 `mlp + gaussian` | 5.0M | 0.44205 |
+| H200 `mlp + gaussian` | 6.0M | 0.42972 |
+| H200 `residual_mean_flow_wm + gaussian` | 4.8M | 0.40596 |
+| H100 `residual_flow + gaussian` | 3.0M | 0.39700 |
+| H100 `residual_mean_flow_wm + gaussian` | 5.6M | 0.34291 |
+| A100 `residual_flow + gaussian` | 2.0M | 0.33476 |
+| A100 `residual_mean_flow_wm + gaussian` | 2.6M | 0.33399 |
+| H200 `residual_flow + gaussian` | 3.4M | 0.32833 |
+| L40S `residual_flow + gaussian` | 2.8M | 0.32219 |
+| L40S `residual_mean_flow_wm + gaussian` | 2.4M | 0.30593 |
+
+Current read:
+
+- `mlp + flow` is the strongest subset20 cell so far across H200/H100/L40S.
+- `mlp + gaussian` remains the strongest original-style baseline.
+- Flow-WM cells have useful signal but are still below the top MLP-WM cells; no architecture flip yet.
+
 ## Success Criteria
 
 Primary metric:

@@ -730,3 +730,13 @@ Current interpretation is unchanged: the strongest signal is still MLP WM; resid
   - Best plain residual-flow WM remains better at 0.25576.
   - OT-CFM is consistently weaker, around 0.221-0.232.
   - MLP WM remains clearly stronger than all flow-WM variants.
+
+2026-06-09 21:28 EDT monitoring:
+
+- L40S `shortcut_residual_flow_wm + gaussian` direct eval row `32` completed as job `9764791_32`.
+- Final eval avg_score: `0.20876`.
+- This confirms the L40S shortcut replicate is weak and below:
+  - A100 shortcut: `0.24545`
+  - H100 shortcut: `0.24033`
+  - best plain residual-flow WM: `0.25576`
+- New-flow conclusion remains unchanged: do not expand shortcut or OT-CFM based on current subset40 evidence; keep focus on MLP WM baselines and the running subset20 high-step comparison.
