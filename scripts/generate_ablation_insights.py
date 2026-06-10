@@ -141,7 +141,7 @@ def collect_runs() -> tuple[list[dict], list[dict], list[dict], list[dict]]:
 def write_csv(path: Path, rows: list[dict], fields: list[str]) -> None:
 	path.parent.mkdir(parents=True, exist_ok=True)
 	with path.open("w", newline="") as f:
-		writer = csv.DictWriter(f, fieldnames=fields)
+		writer = csv.DictWriter(f, fieldnames=fields, lineterminator="\n")
 		writer.writeheader()
 		for row in rows:
 			writer.writerow({k: row.get(k, "") for k in fields})
@@ -304,6 +304,19 @@ def main() -> None:
 
 	plot_2x2_heatmap(two_by_two, out_dir / "subset40_2x2_heatmap.png")
 	plot_bar(wm_variants, out_dir / "subset40_flow_wm_variants.png", "Subset40 5M Flow-WM variants: final avg_score")
+
+	curve_groups_wmvar = defaultdict(list)
+	for run in subset40_train:
+		if run["family"] == "subset40_wmvar" and run["policy"] == "gaussian":
+			curve_groups_wmvar[run["wm"]].append(run)
+	for run in subset40_train:
+		if run["family"] == "subset40_2x2" and run["wm"] == "flow" and run["policy"] == "gaussian":
+			curve_groups_wmvar["flow"].append(run)
+	plot_curves(
+		curve_groups_wmvar,
+		out_dir / "subset40_flow_wm_variants_training_curves.png",
+		"Subset40 5M Flow-WM variant training curves",
+	)
 
 	curve_groups_40 = defaultdict(list)
 	for run in subset40_train:

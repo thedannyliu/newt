@@ -49,9 +49,22 @@ Protocol: subset40, 5M online steps, 50k demo pretraining, Gaussian policy, stat
 | endpoint_flow | 3 | 0.193 +/- 0.006 | 0.198 | Better than pure flow, still weak. |
 | flow | 4 | 0.106 +/- 0.023 | 0.136 | Direct pure flow WM is weakest. |
 
+Variant definitions:
+
+- `flow`: directly models the next latent with a conditional rectified-flow dynamics network.
+- `endpoint_flow`: predicts the endpoint/average velocity toward the next latent instead of integrating a standard multi-step flow.
+- `residual_flow`: keeps an MLP next-latent predictor and adds a rectified-flow residual correction.
+- `residual_mean_flow_wm`: keeps the MLP predictor and adds a one-step mean-flow residual correction.
+- `shortcut_residual_flow_wm`: keeps the MLP predictor and uses a step-size-conditioned shortcut flow for the residual.
+- `ot_cfm_residual_wm`: keeps the MLP predictor and trains the residual flow with sliced-OT conditional flow matching.
+
 Figure:
 
 ![Subset40 flow-WM variants](assets/ablation_insights_20260610/subset40_flow_wm_variants.png)
+
+Training curves:
+
+![Subset40 flow-WM variant training curves](assets/ablation_insights_20260610/subset40_flow_wm_variants_training_curves.png)
 
 Conclusion:
 
@@ -65,10 +78,10 @@ Protocol: subset20 high-step runs. Scores are current latest/peak local metrics;
 
 | Architecture | Runs | Current avg_score mean | Peak score | Mean action_time | Mean update_time | Compute read |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| MLP + flow policy | 4 | 0.569 +/- 0.018 | 0.588 | 0.083s | 0.053s | Best score signal, but action selection is slower than Gaussian. |
-| MLP + Gaussian | 4 | 0.481 +/- 0.042 | 0.591 | 0.049s | 0.042s | Fastest strong baseline; best completed 10M row is 0.538. |
-| residual_flow + Gaussian | 4 | 0.428 +/- 0.027 | 0.511 | 0.115s | 0.056s | Slower than MLP+flow and lower score; currently not Pareto-efficient. |
-| residual_mean_flow_wm + Gaussian | 4 | 0.417 +/- 0.060 | 0.492 | 0.068s | 0.050s | Cheaper than residual_flow but lower score. |
+| MLP + flow policy | 4 | 0.579 +/- 0.009 | 0.588 | 0.083s | 0.053s | Best score signal, but action selection is slower than Gaussian. |
+| MLP + Gaussian | 4 | 0.497 +/- 0.035 | 0.591 | 0.049s | 0.043s | Fastest strong baseline; best completed 10M row is 0.538. |
+| residual_flow + Gaussian | 4 | 0.431 +/- 0.029 | 0.511 | 0.115s | 0.056s | Slower than MLP+flow and lower score; currently not Pareto-efficient. |
+| residual_mean_flow_wm + Gaussian | 4 | 0.425 +/- 0.052 | 0.492 | 0.068s | 0.050s | Cheaper than residual_flow but lower score. |
 
 Figure:
 
@@ -141,6 +154,7 @@ Figures:
 - `docs/assets/ablation_insights_20260610/subset40_2x2_heatmap.png`
 - `docs/assets/ablation_insights_20260610/subset40_2x2_training_curves.png`
 - `docs/assets/ablation_insights_20260610/subset40_flow_wm_variants.png`
+- `docs/assets/ablation_insights_20260610/subset40_flow_wm_variants_training_curves.png`
 - `docs/assets/ablation_insights_20260610/subset20_highstep_training_curves.png`
 - `docs/assets/ablation_insights_20260610/subset20_compute_vs_score.png`
 - `docs/assets/ablation_insights_20260610/scaling_steps_per_task.png`

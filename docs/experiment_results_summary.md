@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-10 18:41 EDT
+Last updated: 2026-06-10 18:52 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -61,17 +61,17 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H100 | complete | 10.0M | 0.53816 | First completed 10M subset20 cell; peak observed eval was 0.58430 at 8.4M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | L40S | resubmitted | 7.6M | 0.58263 | Strong MLP-WM cell; preempted at 7.78M train and resubmitted as `9797385_[1]`. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | L40S | complete | 10.0M | 0.48801 | Completed 10M despite Slurm preemption label; peak observed eval was 0.55139 at 7.4M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | resubmitted | 8.4M | 0.45496 | Continuation `9796333_[0-2]` submitted for inactive incomplete H200 cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | running | 8.4M | 0.45496 | Active as `9796333_0`; peak observed eval was 0.53666 at 7.4M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H100 | running | 8.6M | 0.55795 | Resubmitted as `9799983_1` from 8.5M full checkpoint; peak observed eval was 0.58825 at 4.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | resubmitted | 5.4M | 0.48872 | Continuing toward 10M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | running | 8.4M | 0.44407 | Active as `9796335_0`; peak observed eval was 0.52407 at 8.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | running | 6.8M | 0.56850 | Active as `9796335_1`; best A100 MLP+flow snapshot so far. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | resubmitted | 5.8M | 0.46335 | Preempted at 5.90M train and resubmitted as `9798924_[2-3]`. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | resubmitted | 5.6M | 0.36085 | Continuation `9796335_[1-3]` pending/running group; peak observed eval was 0.42541 at 4.4M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 5.6M | 0.39414 | Active as `9796335_3`; peak observed eval was 0.42541 at 4.4M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | resubmitted | 7.2M | 0.44473 | Preempted at 7.24M train and resubmitted as `9797383_[3]`. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 10.0M | 0.48851 | Completed 10M despite Slurm preemption label; peak observed eval was 0.49207 at 9.2M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | running | 7.0M | 0.44678 | Active as `9796334_2`; peak observed eval was 0.51065 at 6.0M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | resubmitted | 4.8M | 0.41356 | Below MLP cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | resubmitted | 7.0M | 0.44678 | Preempted at 7.0M full checkpoint and resubmitted as `9803431_[2]`; peak observed eval was 0.51065 at 6.0M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 4.8M | 0.41356 | Active as `9796335_2`; below MLP cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | resubmitted | 6.6M | 0.37317 | Preempted at 6.74M train and resubmitted as `9798924_[2-3]`. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | resubmitted | 6.0M | 0.40036 | Below MLP cells. |
 
