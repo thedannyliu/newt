@@ -1,0 +1,7 @@
+wm,policy,n,final_mean,final_std,peak_max,peak_mean,best_run
+endpoint_flow,gaussian,3,0.19335198728629618,0.005546668053191023,0.19806734727462755,0.19335198728629618,eval-subset40-5m-wmvar-a100_wm-endpoint_flow_pi-gaussian_seed-1-20260607a
+flow,gaussian,4,0.10602210424331134,0.022725195064122832,0.1361446166667156,0.10602210424331134,eval-subset40-5m-h100_wm-flow_pi-gaussian_seed-1-20260607a
+ot_cfm_residual_wm,gaussian,3,0.22843557406614612,0.0060760149457771764,0.23226823605829852,0.22843557406614612,eval-subset40-5m-wmvar-h200-newflow1_wm-ot_cfm_residual_wm_pi-gaussian_seed-1-20260609a
+residual_flow,gaussian,4,0.23201427735789365,0.02742778513434489,0.2557639108551666,0.23201427735789365,eval-subset40-5m-wmvar-l40s_wm-residual_flow_pi-gaussian_seed-1-20260608b
+residual_mean_flow_wm,gaussian,4,0.22984685885334327,0.01588272870992642,0.24538395713083444,0.22984685885334327,eval-subset40-5m-wmvar-h100-newflow1_wm-residual_mean_flow_wm_pi-gaussian_seed-1-20260608c
+shortcut_residual_flow_wm,gaussian,4,0.23169906748036734,0.016228945884001936,0.24545131040387788,0.23169906748036734,eval-subset40-5m-wmvar-a100-newflow1_wm-shortcut_residual_flow_wm_pi-gaussian_seed-1-20260609c
