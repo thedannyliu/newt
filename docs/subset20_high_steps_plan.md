@@ -308,6 +308,63 @@ Current read:
 - `mlp + gaussian` remains the strongest original-style baseline.
 - Flow-WM cells have useful signal but are still below the top MLP-WM cells; no architecture flip yet.
 
+## 2026-06-10 03:00 EDT Monitoring and Continuation
+
+Current active jobs before repair:
+
+- Running:
+  - `9768054_3`: H100 `residual_mean_flow_wm + gaussian`
+  - `9768055_3`: A100 `residual_mean_flow_wm + gaussian`
+  - `9768056_0`: L40S `mlp + gaussian`
+- Stopped by `embers` preemption or 8-hour walltime:
+  - H200 `9747574_[0-3]`
+  - H100 `9747575_[0-2]`
+  - A100 `9747577_[0-2]`
+  - L40S `9760035_[1,3]` and `9760175_2`
+
+Checked logs indicate Slurm preemption/time-limit only for the newly stopped jobs; no Python traceback, missing data error, or CUDA OOM was found.
+
+Latest checkpoint/eval progress:
+
+| Run | Latest train step | Latest eval step | Latest eval `avg_score` | Latest checkpoint | Latest full checkpoint |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| A100 `mlp + flow` | 4.66M | 4.60M | 0.48211 | 4.50M | 4.50M |
+| A100 `mlp + gaussian` | 5.66M | 5.60M | 0.49391 | 5.50M | 5.50M |
+| A100 `residual_flow + gaussian` | 3.64M | 3.60M | 0.36821 | 3.50M | 3.50M |
+| A100 `residual_mean_flow_wm + gaussian` | 4.12M | 4.00M | 0.39958 | 4.00M | 4.00M |
+| H100 `mlp + flow` | 6.44M | 6.40M | 0.51718 | 6.25M | 6.00M |
+| H100 `mlp + gaussian` | 8.46M | 8.40M | 0.58430 | 8.25M | 8.00M |
+| H100 `residual_flow + gaussian` | 4.40M | 4.40M | 0.38287 | 4.25M | 4.00M |
+| H100 `residual_mean_flow_wm + gaussian` | 8.04M | 8.00M | 0.38443 | 8.00M | 8.00M |
+| H200 `mlp + flow` | 5.50M | 5.40M | 0.48872 | 5.50M | 5.50M |
+| H200 `mlp + gaussian` | 7.20M | 7.20M | 0.51096 | 7.00M | 7.00M |
+| H200 `residual_flow + gaussian` | 3.86M | 3.80M | 0.33989 | 3.75M | 3.50M |
+| H200 `residual_mean_flow_wm + gaussian` | 6.00M | 6.00M | 0.39679 | 6.00M | 6.00M |
+| L40S `mlp + flow` | 5.34M | 5.20M | 0.52713 | 5.25M | 5.00M |
+| L40S `mlp + gaussian` | 6.78M | 6.60M | 0.51172 | 6.75M | 6.50M |
+| L40S `residual_flow + gaussian` | 4.14M | 4.00M | 0.41860 | 4.00M | 4.00M |
+| L40S `residual_mean_flow_wm + gaussian` | 4.18M | 4.00M | 0.35884 | 4.00M | 4.00M |
+
+Repair submissions:
+
+| Job | Partition | Array | Run tag | Cells |
+| ---: | --- | --- | --- | --- |
+| `9779356` | `gpu-h200` | `0-3` | `h200-r1` | all H200 cells |
+| `9779357` | `gpu-h100` | `0-2` | `h100-r1` | inactive H100 cells; array `3` already running |
+| `9779360` | `gpu-a100` | `0-2` | `a100-r1` | inactive A100 cells; array `3` already running |
+| `9779361` | `gpu-l40s` | `1-3` | `l40s-r1` | inactive L40S cells; array `0` already running |
+
+Queue after repair:
+
+- `9768054_3`, `9768055_3`, and `9768056_0` remain running.
+- `9779356_[0-3]`, `9779357_[0-2]`, `9779360_[0-2]`, and `9779361_[1-3]` are pending with reason `None`.
+
+Current read:
+
+- H100 `mlp + gaussian` has the best current subset20 eval at `0.58430` around 8.4M.
+- `mlp + flow` remains strong across GPU types, especially L40S/H100.
+- Flow-WM cells still trail MLP-WM cells; no evidence yet that longer subset20 training flips the architecture ranking.
+
 ## Success Criteria
 
 Primary metric:
