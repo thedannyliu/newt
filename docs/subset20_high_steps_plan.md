@@ -479,6 +479,54 @@ Current read:
 - Flow-WM cells improved with longer training but remain below the strongest MLP-WM cells.
 - L40S `mlp + gaussian` is very close to the 10M target; if it times out before the final checkpoint, resume from its latest full checkpoint.
 
+## 2026-06-10 15:04 EDT Monitoring and Continuation
+
+Queue check:
+
+- Running:
+  - `9796335_0`: A100 `mlp + gaussian`
+  - `9779361_2`: L40S `residual_flow + gaussian`
+  - `9779361_3`: L40S `residual_mean_flow_wm + gaussian`
+- Pending:
+  - `9796333_[0-2]`: H200 incomplete cells
+  - `9796334_[1-3]`: H100 incomplete cells
+  - `9796335_[1-3]`: A100 incomplete cells
+
+Stopped since the previous check:
+
+- `9779356_3`: H200 `residual_mean_flow_wm + gaussian`, preempted after reaching 7.24M train / 7.20M eval.
+- `9779361_1`: L40S `mlp + flow`, preempted after reaching 7.78M train / 7.60M eval.
+- `9781549_0`: L40S `mlp + gaussian`, marked preempted in `sacct` but stdout shows `Training completed successfully`; it reached 10.0M train / 10.0M eval and should not be resubmitted.
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Checkpoint | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 10.0M full | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 10.0M full | complete |
+| H200 `mlp + flow` | 9.06M | 9.0M | 0.58255 | 9.0M full | pending continuation |
+| H100 `mlp + flow` | 7.8M | 7.8M | 0.57361 | 7.5M full | pending continuation |
+| L40S `mlp + flow` | 7.78M | 7.6M | 0.58263 | 7.5M full | resubmitted |
+| A100 `mlp + flow` | 6.5M | 6.4M | 0.55556 | 6.5M full | pending continuation |
+| A100 `mlp + gaussian` | 6.88M | 6.8M | 0.48545 | 6.5M full | running |
+| H200 `residual_mean_flow_wm + gaussian` | 7.24M | 7.2M | 0.44473 | 7.0M full | resubmitted |
+| H100 `residual_mean_flow_wm + gaussian` | 9.22M | 9.2M | 0.43459 | 9.0M full | pending continuation |
+| L40S `residual_flow + gaussian` | 5.74M | 5.6M | 0.39965 | 5.5M full | running |
+| L40S `residual_mean_flow_wm + gaussian` | 6.5M | 6.4M | 0.34956 | 6.5M full | running |
+
+Repair submissions:
+
+| Job | Partition | Array | Run tag | Cell |
+| ---: | --- | --- | --- | --- |
+| `9797383` | `gpu-h200` | `3` | `h200-r1` | `residual_mean_flow_wm + gaussian` |
+| `9797385` | `gpu-l40s` | `1` | `l40s-r1` | `mlp + flow` |
+
+Current read:
+
+- The second 10M cell is complete: L40S `mlp + gaussian` reached `avg_score=0.48801`.
+- L40S `mlp + flow` reached the strongest latest-step local score so far at `0.58263` at 7.6M eval, but still needs continuation to 10M.
+- Flow-WM cells remain behind MLP-WM cells; H200 `residual_mean_flow_wm + gaussian` improved to `0.44473` at 7.2M but does not close the gap.
+
 ## Success Criteria
 
 Primary metric:
