@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-10 03:00 EDT
+Last updated: 2026-06-10 04:11 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -60,14 +60,14 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset40 WM variant | 40 | 5M + 50k demo | endpoint_flow | Gaussian | L40S | complete | 5M | 0.18724 | Endpoint flow not competitive. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H100 | running/resubmitted | 8.4M | 0.58430 | Current strongest local subset20 eval; continuation `9779357_[0-2]` submitted for inactive H100 cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | L40S | running/resubmitted | 5.2M | 0.52713 | Strong MLP-WM cell; continuation `9779361_[1-3]` submitted for inactive L40S cells. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | L40S | running | 6.6M | 0.51172 | Strong baseline; array 0 still active as `9768056_0`. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | L40S | resubmitted | 7.2M | 0.52470 | Strong baseline; array 0 preempted and continuation `9781549_[0]` submitted. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | resubmitted | 7.2M | 0.51096 | Continuation `9779356_[0-3]` submitted for all inactive H200 cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H100 | resubmitted | 6.4M | 0.51718 | Strong MLP-WM cell. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | resubmitted | 5.4M | 0.48872 | Continuing toward 10M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | resubmitted | 5.6M | 0.49391 | Continuation `9779360_[0-2]` submitted for inactive A100 cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | resubmitted | 4.6M | 0.48211 | Continuing toward 10M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | resubmitted | 4.0M | 0.41860 | Best current residual_flow snapshot. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 4.0M | 0.39958 | Active as `9768055_3`; below top MLP cells. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 4.4M | 0.42541 | Active as `9768055_3`; below top MLP cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | resubmitted | 6.0M | 0.39679 | Below top MLP cells. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | running | 8.0M | 0.38443 | Active as `9768054_3`; still below MLP. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | resubmitted | 4.4M | 0.38287 | Below MLP cells. |

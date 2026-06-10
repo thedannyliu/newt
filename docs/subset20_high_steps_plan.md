@@ -365,6 +365,55 @@ Current read:
 - `mlp + flow` remains strong across GPU types, especially L40S/H100.
 - Flow-WM cells still trail MLP-WM cells; no evidence yet that longer subset20 training flips the architecture ranking.
 
+## 2026-06-10 04:11 EDT Monitoring and Continuation
+
+Follow-up status:
+
+- Running:
+  - `9768054_3`: H100 `residual_mean_flow_wm + gaussian`
+  - `9768055_3`: A100 `residual_mean_flow_wm + gaussian`
+  - `9779357_[0-2]`: H100 inactive-cell continuations
+- Pending:
+  - `9779356_[0-3]`: H200 all-cell continuation
+  - `9779360_[0-2]`: A100 inactive-cell continuation
+  - `9779361_[1-3]`: L40S inactive-cell continuation
+- Newly stopped:
+  - `9768056_0`: L40S `mlp + gaussian`, preempted after reaching 7.22M train / 7.20M eval.
+
+Repair action:
+
+- Submitted L40S `mlp + gaussian` continuation as `9781549_[0]`.
+
+Metrics note:
+
+- Some resumed runs append lower-step rows after loading the latest full checkpoint, so monitoring should compare the highest eval step per run, not simply the last row in `metrics.jsonl`.
+
+Highest-step eval snapshot:
+
+| Run | Highest eval step | `avg_score` |
+| --- | ---: | ---: |
+| H100 `mlp + gaussian` | 8.4M | 0.58430 |
+| L40S `mlp + flow` | 5.2M | 0.52713 |
+| L40S `mlp + gaussian` | 7.2M | 0.52470 |
+| H100 `mlp + flow` | 6.4M | 0.51718 |
+| H200 `mlp + gaussian` | 7.2M | 0.51096 |
+| A100 `mlp + gaussian` | 5.6M | 0.49391 |
+| H200 `mlp + flow` | 5.4M | 0.48872 |
+| A100 `mlp + flow` | 4.6M | 0.48211 |
+| H100 `residual_mean_flow_wm + gaussian` | 8.6M | 0.45783 |
+| A100 `residual_mean_flow_wm + gaussian` | 4.4M | 0.42541 |
+| L40S `residual_flow + gaussian` | 4.0M | 0.41860 |
+| H200 `residual_mean_flow_wm + gaussian` | 6.0M | 0.39679 |
+| H100 `residual_flow + gaussian` | 4.4M | 0.38287 |
+| A100 `residual_flow + gaussian` | 3.6M | 0.36821 |
+| L40S `residual_mean_flow_wm + gaussian` | 4.0M | 0.35884 |
+| H200 `residual_flow + gaussian` | 3.8M | 0.33989 |
+
+Current read:
+
+- MLP-WM cells still dominate the subset20 run.
+- The best flow-WM signal is now H100 `residual_mean_flow_wm + gaussian` at `0.45783`, but it remains below the MLP-WM cells at comparable or higher eval steps.
+
 ## Success Criteria
 
 Primary metric:
