@@ -670,6 +670,55 @@ Current read:
 - H100 `residual_flow + gaussian` is the best flow-WM signal so far, reaching `0.52048` at 7.8M. This supports the hypothesis that flow-WM needs more per-task interaction, but it still does not beat MLP-WM peak performance and remains slower.
 - The most robust completed original-style baseline is still H100 `mlp + gaussian`: final `0.53816`, peak `0.59102`.
 
+## 2026-06-10 22:41 EDT Monitoring and Continuation
+
+Queue and accounting check:
+
+- Running:
+  - `9796335_[1-3]`: A100 `mlp + flow`, `residual_flow + gaussian`, and `residual_mean_flow_wm + gaussian`.
+  - `9809461_2`: H100 `residual_flow + gaussian` continuation.
+  - `9797385_1`: L40S `mlp + flow` continuation.
+  - `9798924_[2-3]`: L40S flow-WM continuations.
+- Pending:
+  - `9796333_[1-2]`: H200 `mlp + flow` and `residual_flow + gaussian`.
+  - `9809460_[0]`: H200 `mlp + gaussian` continuation.
+  - `9813253_[3]`: H200 `residual_mean_flow_wm + gaussian` continuation.
+- Newly completed/stopped:
+  - `9796335_0`: A100 `mlp + gaussian` completed 10M successfully.
+  - `9797383_3`: H200 `residual_mean_flow_wm + gaussian` preempted after reaching 8.28M train / 8.2M eval.
+
+Repair submission:
+
+| Job | Partition | Array | Run tag | Cell |
+| ---: | --- | --- | --- | --- |
+| `9813253` | `gpu-h200` | `3` | `h200-r1` | `residual_mean_flow_wm + gaussian` continuation from latest checkpoint. |
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Peak `avg_score` | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 0.59102 | complete |
+| A100 `mlp + gaussian` | 10.0M | 10.0M | 0.53570 | 0.56490 | complete |
+| H100 `mlp + flow` | 10.0M | 10.0M | 0.50044 | 0.58825 | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 0.55139 | complete |
+| H200 `mlp + gaussian` | 9.98M | 9.8M | 0.46450 | 0.53666 | pending continuation |
+| H200 `mlp + flow` | 9.06M | 9.0M | 0.58255 | 0.58663 | pending continuation |
+| A100 `mlp + flow` | 8.22M | 8.2M | 0.53745 | 0.56850 | running |
+| L40S `mlp + flow` | 7.94M | 7.8M | 0.52493 | 0.54459 | running |
+| H100 `residual_flow + gaussian` | 7.88M | 7.8M | 0.52048 | 0.52048 | running continuation |
+| H200 `residual_mean_flow_wm + gaussian` | 8.28M | 8.2M | 0.45312 | 0.45594 | resubmitted |
+| A100 `residual_mean_flow_wm + gaussian` | 6.90M | 6.8M | 0.42658 | 0.42658 | running |
+| A100 `residual_flow + gaussian` | 5.52M | 5.4M | 0.41459 | 0.42288 | running |
+| L40S `residual_flow + gaussian` | 5.90M | 5.8M | 0.46335 | 0.46335 | running continuation |
+| L40S `residual_mean_flow_wm + gaussian` | 6.80M | 6.8M | 0.39305 | 0.39305 | running continuation |
+| H200 `residual_flow + gaussian` | 6.12M | 6.0M | 0.40036 | 0.47019 | pending continuation |
+
+Current read:
+
+- A100 `mlp + gaussian` gives a second completed original-style baseline near H100: final `0.53570` vs H100 final `0.53816`.
+- H100 `residual_flow + gaussian` remains the strongest flow-WM signal at `0.52048`, but it still needs continuation to 10M to know whether it holds.
+- H200 `residual_mean_flow_wm + gaussian` recovered to `0.45312` at 8.2M but is still below H100 `residual_flow`; it was resubmitted to continue toward 10M.
+
 ## Success Criteria
 
 Primary metric:

@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-10 21:42 EDT
+Last updated: 2026-06-10 22:41 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -64,14 +64,14 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | H200 | resubmitted | 9.8M | 0.46450 | Preempted near target and resubmitted as `9809460_[0]`; peak observed eval was 0.53666 at 7.4M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H100 | complete | 10.0M | 0.50044 | Reached 10M; peak observed eval was 0.58825 at 4.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | resubmitted | 9.0M | 0.58255 | Continuing toward 10M; peak observed eval was 0.58663 at 8.8M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | running | 9.8M | 0.51270 | Active as `9796335_0`; peak observed eval was 0.56490 at 9.4M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | running | 7.8M | 0.53052 | Active as `9796335_1`; peak observed eval was 0.56850 at 6.8M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | complete | 10.0M | 0.53570 | Completed 10M; peak observed eval was 0.56490 at 9.4M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | running | 8.2M | 0.53745 | Active as `9796335_1`; peak observed eval was 0.56850 at 6.8M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | resubmitted | 5.8M | 0.46335 | Preempted at 5.90M train and resubmitted as `9798924_[2-3]`. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 6.4M | 0.37361 | Active as `9796335_3`; peak observed eval was 0.42541 at 4.4M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | running | 8.0M | 0.43618 | Active as `9797383_3`; peak observed eval was 0.45594 at 7.0M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | running | 6.8M | 0.42658 | Active as `9796335_3`; best A100 residual_mean snapshot so far. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | resubmitted | 8.2M | 0.45312 | Preempted after 8.25M checkpoint and resubmitted as `9813253_[3]`; peak observed eval was 0.45594 at 7.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 10.0M | 0.48851 | Completed 10M despite Slurm preemption label; peak observed eval was 0.49207 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | resubmitted | 7.8M | 0.52048 | Preempted after strongest flow-WM snapshot and resubmitted as `9809461_[2]`. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 5.2M | 0.38966 | Active as `9796335_2`; peak observed eval was 0.42288 at 4.8M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 5.4M | 0.41459 | Active as `9796335_2`; peak observed eval was 0.42288 at 4.8M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | resubmitted | 6.6M | 0.37317 | Preempted at 6.74M train and resubmitted as `9798924_[2-3]`. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | resubmitted | 6.0M | 0.40036 | Below MLP cells. |
 
