@@ -19,8 +19,8 @@ Important caveat: `mean +/- std` below is over completed local runs across GPU/r
 | Official TD-MPC2 single-task | 200 | 1B total across 200 single-task agents | MLP WM | Gaussian + MPC | 1B | 0.800 | n/a | Upper reference, not a multitask agent. |
 | Our subset40 best completed 2x2 | 40 | 5M + 50k demo | MLP WM | Flow policy | 5M | 0.321 +/- 0.012 | 0.339 | Mean +/- std over 4 completed runs; best single run 0.339. Best completed 2x2 architecture. |
 | Our subset40 best flow-WM | 40 | 5M + 50k demo | Residual_flow WM | Gaussian | 5M | 0.232 +/- 0.027 | 0.256 | Mean +/- std over 4 completed runs; best single run 0.256. Best flow-WM variant, still below MLP WM. |
-| Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 7.8M-10.0M current | 0.500-0.583 | 0.588 | Best peak architecture signal; H100 reached 10M but final dipped below its earlier peak. |
-| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 5.4M-7.8M current | 0.400-0.520 | 0.520 | Flow-WM improves with more steps; H100 residual_flow is now the strongest flow-WM signal, but still below MLP-WM peak and slower. |
+| Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 8.8M-10.0M current | 0.467-0.609 | 0.609 | Best peak architecture signal; A100 reached 0.609 at 9.0M, while completed H100/H200 finals are lower. |
+| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 6.4M-8.8M current | 0.431-0.449 | 0.511 | H100 residual_flow peak is still the strongest flow-WM signal, but latest scores regressed and remain below MLP-WM peak. |
 
 ## Architecture Ablation
 
@@ -101,7 +101,7 @@ Definitions:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | MLP + flow policy | 10.0M | 0.500 | 0.588 | 0.060s | 0.046s | 86.8s | Best current peak score signal, but final score dipped while action planning remains slower than Gaussian. |
 | MLP + Gaussian | 10.0M | 0.538 | 0.591 | 0.035s | 0.038s | 61.7s | Original Newt setting; fastest strong baseline on H100. |
-| residual_flow + Gaussian | 7.8M | 0.520 | 0.520 | 0.077s | 0.053s | 102.5s | Best flow-WM signal so far, but still slower than MLP choices and below MLP peak. |
+| residual_flow + Gaussian | 8.8M | 0.449 | 0.511 | 0.077s | 0.055s | 102.5s | Best flow-WM peak so far, but latest score regressed and remains slower than MLP choices. |
 | residual_mean_flow_wm + Gaussian | 10.0M | 0.489 | 0.492 | 0.049s | 0.048s | 71.8s | Cheaper than residual_flow but still below MLP WM. |
 
 Figure:
