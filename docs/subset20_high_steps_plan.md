@@ -619,6 +619,57 @@ Current read:
 - `MLP + flow` still has the best peak architecture signal, but H100 latest-step score dipped near 10M. Final 10M comparison should use both final and peak scores.
 - `residual_flow + gaussian` improved on H100 to `0.46682` at 7.4M, but it remains below MLP-WM cells and is slower at action/eval time.
 
+## 2026-06-10 21:42 EDT Monitoring and Continuation
+
+Queue and accounting check:
+
+- Still running:
+  - `9796335_[0-3]`: A100 all four subset20 cells.
+  - `9797383_3`: H200 `residual_mean_flow_wm + gaussian`.
+  - `9797385_1`: L40S `mlp + flow`.
+- Still pending:
+  - `9796333_[1-2]`: H200 `mlp + flow` and `residual_flow + gaussian`.
+  - `9798924_[2-3]`: L40S flow-WM continuations.
+- Newly stopped:
+  - `9796333_0`: H200 `mlp + gaussian`, preempted near target at 9.98M train / 9.8M eval.
+  - `9799983_1`: H100 `mlp + flow`, stopped after reaching the 10M target.
+  - `9803431_2`: H100 `residual_flow + gaussian`, preempted after reaching 7.88M train / 7.8M eval.
+
+Repair submissions:
+
+| Job | Partition | Array | Run tag | Cell |
+| ---: | --- | --- | --- | --- |
+| `9809460` | `gpu-h200` | `0` | `h200-r1` | `mlp + gaussian` continuation from the latest checkpoint. |
+| `9809461` | `gpu-h100` | `2` | `h100-r1` | `residual_flow + gaussian` continuation from the latest checkpoint. |
+
+Note: first targeted submission attempt failed because Slurm required the explicit account when overriding partition settings. Existing jobs use account `gts-agarg35`; the successful replacement submissions use that account with `qos=embers`.
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Peak `avg_score` | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 0.59102 | complete |
+| H100 `mlp + flow` | 10.0M | 10.0M | 0.50044 | 0.58825 | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 0.55139 | complete |
+| H200 `mlp + gaussian` | 9.98M | 9.8M | 0.46450 | 0.53666 | resubmitted |
+| A100 `mlp + gaussian` | 9.84M | 9.8M | 0.51270 | 0.56490 | running |
+| H200 `mlp + flow` | 9.06M | 9.0M | 0.58255 | 0.58663 | pending continuation |
+| L40S `mlp + flow` | 7.78M | 7.6M | 0.58263 | 0.58263 | running continuation |
+| A100 `mlp + flow` | 7.92M | 7.8M | 0.53052 | 0.56850 | running |
+| H100 `residual_flow + gaussian` | 7.88M | 7.8M | 0.52048 | 0.52048 | resubmitted |
+| H200 `residual_mean_flow_wm + gaussian` | 8.06M | 8.0M | 0.43618 | 0.45594 | running |
+| A100 `residual_flow + gaussian` | 5.24M | 5.2M | 0.38966 | 0.42288 | running |
+| A100 `residual_mean_flow_wm + gaussian` | 6.52M | 6.4M | 0.37361 | 0.42541 | running |
+| L40S `residual_flow + gaussian` | 5.90M | 5.8M | 0.46335 | 0.46335 | pending continuation |
+| L40S `residual_mean_flow_wm + gaussian` | 6.74M | 6.6M | 0.37317 | 0.37962 | pending continuation |
+| H200 `residual_flow + gaussian` | 6.12M | 6.0M | 0.40036 | 0.47019 | pending continuation |
+
+Current read:
+
+- H100 `mlp + flow` reached 10M but its final score dropped to `0.50044`; its peak remains strong at `0.58825`.
+- H100 `residual_flow + gaussian` is the best flow-WM signal so far, reaching `0.52048` at 7.8M. This supports the hypothesis that flow-WM needs more per-task interaction, but it still does not beat MLP-WM peak performance and remains slower.
+- The most robust completed original-style baseline is still H100 `mlp + gaussian`: final `0.53816`, peak `0.59102`.
+
 ## Success Criteria
 
 Primary metric:
