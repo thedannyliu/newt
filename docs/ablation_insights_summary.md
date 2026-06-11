@@ -1,12 +1,13 @@
 # Ablations and Insights
 
-Generated: 2026-06-10 EDT
+Generated: 2026-06-11 EDT
 
 Source metrics:
 
 - Local run logs: `outputs/logs/soup/1/*/metrics.jsonl`
 - Generated tables/figures: `docs/assets/ablation_insights_20260610/`
 - W&B project: https://wandb.ai/danny010324/newt-flow-2x2
+- Latest figure refresh: 2026-06-11 03:38 EDT. The subset20 high-step CSVs and figures were regenerated because new H200 subset20 metrics arrived.
 
 Important caveat: `mean +/- std` below is over completed local runs across GPU/replicate labels, not over independent random seeds unless explicitly stated.
 
