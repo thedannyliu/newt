@@ -758,7 +758,7 @@ Latest highest-step eval snapshot:
 | H200 `mlp + flow` | 10.0M | 10.0M | 0.53852 | 0.58663 | complete |
 | H100 `mlp + flow` | 10.0M | 10.0M | 0.50044 | 0.58825 | complete |
 | L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 0.55139 | complete |
-| A100 `mlp + flow` | 9.04M | 9.0M | 0.60928 | 0.60928 | resubmitted |
+| A100 `mlp + flow` | 9.04M | 9.0M | 0.60544 | 0.60544 | resubmitted |
 | H200 `mlp + gaussian` | 9.98M | 9.8M | 0.47736 | 0.53666 | running |
 | L40S `mlp + flow` | 8.90M | 8.8M | 0.46663 | 0.55132 | resubmitted |
 | H100 `residual_flow + gaussian` | 8.90M | 8.8M | 0.44898 | 0.51065 | resubmitted |
@@ -771,7 +771,7 @@ Latest highest-step eval snapshot:
 
 Current read:
 
-- A100 `mlp + flow` produced the best peak seen so far: `0.60928` at 9.0M. It was preempted before 10M and has been resubmitted.
+- A100 `mlp + flow` produced the best peak seen so far: `0.60544` at 9.0M. It was preempted before 10M and has been resubmitted.
 - Flow-WM progress is mixed. H100 `residual_flow` still has the best flow-WM peak, `0.51065`, but its latest eval regressed to `0.44898` by 8.8M.
 - Completed MLP baselines remain more reliable than flow-WM cells. H100/A100 `mlp + gaussian` both finish around `0.536-0.538`; H200/H100 completed `mlp + flow` finals are lower than their peaks.
 

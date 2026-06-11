@@ -362,6 +362,8 @@ def main() -> None:
 	for run in subset40_train:
 		if run["family"] == "subset40_2x2":
 			curve_groups_40[f"{run['wm']}+{run['policy']}"].append(run)
+		if run["family"] == "subset40_wmvar" and run["wm"] == "residual_flow" and run["policy"] == "gaussian":
+			curve_groups_40["residual_flow+gaussian"].append(run)
 	plot_curves(curve_groups_40, out_dir / "subset40_2x2_training_curves.png", "Subset40 5M training curves by architecture")
 
 	keep20 = {
