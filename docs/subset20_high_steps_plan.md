@@ -775,6 +775,65 @@ Current read:
 - Flow-WM progress is mixed. H100 `residual_flow` still has the best flow-WM peak, `0.51065`, but its latest eval regressed to `0.44898` by 8.8M.
 - Completed MLP baselines remain more reliable than flow-WM cells. H100/A100 `mlp + gaussian` both finish around `0.536-0.538`; H200/H100 completed `mlp + flow` finals are lower than their peaks.
 
+## 2026-06-11 14:52 EDT status check
+
+Regenerated ablation tables/figures with:
+
+```bash
+/storage/project/r-agarg35-0/eliu354/envs/newt_official_20260602/bin/python scripts/generate_ablation_insights.py --out-dir docs/assets/ablation_insights_20260610
+```
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Peak `avg_score` | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| A100 `mlp + flow` | 10.0M | 10.0M | 0.57810 | 0.60544 | complete; best subset20 final/peak so far |
+| H200 `mlp + flow` | 10.0M | 10.0M | 0.53852 | 0.58663 | complete |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 0.59102 | complete |
+| A100 `mlp + gaussian` | 10.0M | 10.0M | 0.53570 | 0.56490 | complete |
+| L40S `mlp + flow` | 10.0M | 10.0M | 0.50825 | 0.55390 | complete |
+| H100 `mlp + flow` | 10.0M | 10.0M | 0.50044 | 0.58825 | complete |
+| H200 `mlp + gaussian` | 10.0M | 10.0M | 0.49223 | 0.53666 | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 0.55139 | complete |
+| H100 `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.48851 | 0.49207 | complete |
+| H100 `residual_flow + gaussian` | 10.0M | 10.0M | 0.45304 | 0.51065 | complete |
+| H200 `residual_flow + gaussian` | 8.98M | 8.8M | 0.47051 | 0.47997 | resubmitted |
+| L40S `residual_mean_flow_wm + gaussian` | 9.26M | 9.2M | 0.44734 | 0.44734 | running |
+| A100 `residual_flow + gaussian` | 7.42M | 7.4M | 0.43775 | 0.49544 | resubmitted |
+| H200 `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.39218 | 0.47535 | complete |
+| A100 `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.37559 | 0.48471 | complete |
+| L40S `residual_flow + gaussian` | 7.70M | 7.6M | 0.37208 | 0.45885 | running |
+
+Repair submissions:
+
+| Job | Partition | Array | Run tag | Cell | Reason |
+| ---: | --- | --- | --- | --- | --- |
+| `9835924` | `gpu-h200` | `2` | `h200-r1` | `residual_flow + gaussian` | Previous H200 run timed out before 10M; resume from latest checkpoint. |
+| `9835925` | `gpu-a100` | `2` | `a100-r1` | `residual_flow + gaussian` | Previous A100 run was preempted before 10M; resume from latest checkpoint. |
+
+Next controlled-repeat submissions:
+
+| Job | Partition | Array | Run tag | Seed | Cells | W&B group |
+| ---: | --- | --- | --- | ---: | --- | --- |
+| `9836001` | `gpu-h200` | `0-1` | `h200-seed2` | 2 | `mlp + gaussian`, `mlp + flow` | `subset20-10m-true-seeds` |
+| `9836002` | `gpu-h200` | `0-1` | `h200-seed3` | 3 | `mlp + gaussian`, `mlp + flow` | `subset20-10m-true-seeds` |
+
+Queue after resubmission:
+
+- `9820444_2`: L40S `residual_flow + gaussian`, running.
+- `9820444_3`: L40S `residual_mean_flow_wm + gaussian`, running.
+- `9835924_[2]`: H200 `residual_flow + gaussian`, pending for priority.
+- `9835925_[2]`: A100 `residual_flow + gaussian`, pending for priority.
+- `9836001_[0-1]`: H200 seed-2 repeats for the two MLP-WM cells, pending for priority.
+- `9836002_[0-1]`: H200 seed-3 repeats for the two MLP-WM cells, pending for priority.
+
+Current read:
+
+- MLP-WM remains the clear subset20 winner. A100 `mlp + flow` now has the best 10M final (`0.57810`) and best peak (`0.60544`).
+- Flow-WM did not close the gap at 10M. H100 `residual_flow` peaked at `0.51065` but finished at `0.45304`; `residual_mean_flow_wm` is generally lower or unstable across hardware.
+- The remaining useful work is to finish A100/H200/L40S `residual_flow` and L40S `residual_mean_flow_wm` to complete the flow-WM comparison.
+- In parallel, the new H200 seed-2/seed-3 repeats test whether the observed `MLP+flow` advantage over `MLP+gaussian` is robust enough to report as more than a single-seed/hardware signal.
+
 ## Success Criteria
 
 Primary metric:

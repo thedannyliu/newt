@@ -7,7 +7,7 @@ Source metrics:
 - Local run logs: `outputs/logs/soup/1/*/metrics.jsonl`
 - Generated tables/figures: `docs/assets/ablation_insights_20260610/`
 - W&B project: https://wandb.ai/danny010324/newt-flow-2x2
-- Latest figure refresh: 2026-06-11 03:38 EDT. The subset20 high-step CSVs and figures were regenerated because new H200 subset20 metrics arrived.
+- Latest figure refresh: 2026-06-11 14:52 EDT. The subset20 high-step CSVs and figures were regenerated because new 10M completions and residual-flow continuations arrived.
 
 Important caveat: `mean +/- std` below is over completed local runs across GPU/replicate labels, not over independent random seeds unless explicitly stated.
 
@@ -20,8 +20,8 @@ Important caveat: `mean +/- std` below is over completed local runs across GPU/r
 | Official TD-MPC2 single-task | 200 | 1B total across 200 single-task agents | MLP WM | Gaussian + MPC | 1B | 0.800 | n/a | Upper reference, not a multitask agent. |
 | Our subset40 best completed 2x2 | 40 | 5M + 50k demo | MLP WM | Flow policy | 5M | 0.321 +/- 0.012 | 0.339 | Mean +/- std over 4 completed runs; best single run 0.339. Best completed 2x2 architecture. |
 | Our subset40 best flow-WM | 40 | 5M + 50k demo | Residual_flow WM | Gaussian | 5M | 0.232 +/- 0.027 | 0.256 | Mean +/- std over 4 completed runs; best single run 0.256. Best flow-WM variant, still below MLP WM. |
-| Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 8.8M-10.0M current | 0.467-0.605 | 0.605 | Best peak architecture signal; A100 reached 0.605 at 9.0M, while completed H100/H200 finals are lower. |
-| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 6.4M-8.8M current | 0.431-0.449 | 0.511 | H100 residual_flow peak is still the strongest flow-WM signal, but latest scores regressed and remain below MLP-WM peak. |
+| Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 10.0M | 0.500-0.578 | 0.605 | All four hardware/replicate labels reached 10M; A100 is best with 0.578 final and 0.605 peak. |
+| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 7.4M-10.0M current | 0.372-0.471 | 0.511 | H100 residual_flow peak is still the strongest flow-WM signal, but 10M H100 final is 0.453 and remains below MLP-WM peak. |
 
 ## Architecture Ablation
 
@@ -104,7 +104,7 @@ Definitions:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | MLP + flow policy | 10.0M | 0.500 | 0.588 | 0.060s | 0.046s | 86.8s | Best current peak score signal, but final score dipped while action planning remains slower than Gaussian. |
 | MLP + Gaussian | 10.0M | 0.538 | 0.591 | 0.035s | 0.038s | 61.7s | Original Newt setting; fastest strong baseline on H100. |
-| residual_flow + Gaussian | 8.8M | 0.449 | 0.511 | 0.077s | 0.055s | 102.5s | Best flow-WM peak so far, but latest score regressed and remains slower than MLP choices. |
+| residual_flow + Gaussian | 10.0M | 0.453 | 0.511 | 0.083s | 0.074s | 103.4s | Best flow-WM peak so far, but 10M final remains below MLP choices and action/update time is higher. |
 | residual_mean_flow_wm + Gaussian | 10.0M | 0.489 | 0.492 | 0.049s | 0.048s | 71.8s | Cheaper than residual_flow but still below MLP WM. |
 
 Figure:
@@ -114,7 +114,7 @@ Figure:
 Conclusion:
 
 - `MLP + flow policy` is the best score candidate but increases action/planning-time cost.
-- `residual_flow` costs more action time while producing lower score, so it is currently dominated by MLP-based choices.
+- `residual_flow` costs more action/update time while producing lower score, so it is currently dominated by MLP-based choices.
 - Logged `steps_per_second` and wall-clock estimates are resume/preemption-sensitive; use them as rough diagnostics, not final claims. For final reporting, compute wall-clock from Slurm accounting after jobs finish.
 
 ## Training Budget / Scaling Ablation
