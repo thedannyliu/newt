@@ -7,7 +7,7 @@ Source metrics:
 - Local run logs: `outputs/logs/soup/1/*/metrics.jsonl`
 - Generated tables/figures: `docs/assets/ablation_insights_20260610/`
 - W&B project: https://wandb.ai/danny010324/newt-flow-2x2
-- Latest figure refresh: 2026-06-11 14:52 EDT. The subset20 high-step CSVs and figures were regenerated because new 10M completions and residual-flow continuations arrived.
+- Latest figure refresh: 2026-06-11 22:48 EDT. The subset20 high-step CSVs and figures were regenerated after H200 residual_flow reached 10M and additional A100/L40S residual_flow continuation metrics arrived.
 
 Important caveat: `mean +/- std` below is over completed local runs across GPU/replicate labels, not over independent random seeds unless explicitly stated.
 
@@ -21,7 +21,7 @@ Important caveat: `mean +/- std` below is over completed local runs across GPU/r
 | Our subset40 best completed 2x2 | 40 | 5M + 50k demo | MLP WM | Flow policy | 5M | 0.321 +/- 0.012 | 0.339 | Mean +/- std over 4 completed runs; best single run 0.339. Best completed 2x2 architecture. |
 | Our subset40 best flow-WM | 40 | 5M + 50k demo | Residual_flow WM | Gaussian | 5M | 0.232 +/- 0.027 | 0.256 | Mean +/- std over 4 completed runs; best single run 0.256. Best flow-WM variant, still below MLP WM. |
 | Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 10.0M | 0.500-0.578 | 0.605 | All four hardware/replicate labels reached 10M; A100 is best with 0.578 final and 0.605 peak. |
-| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 7.4M-10.0M current | 0.372-0.471 | 0.511 | H100 residual_flow peak is still the strongest flow-WM signal, but 10M H100 final is 0.453 and remains below MLP-WM peak. |
+| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 7.4M-10.0M current | 0.389-0.455 | 0.511 | H100 residual_flow peak is still the strongest flow-WM signal; H100/H200 10M finals are 0.453/0.455 and remain below MLP-WM. |
 
 ## Architecture Ablation
 
