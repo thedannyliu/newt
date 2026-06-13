@@ -950,6 +950,55 @@ Current read:
 - The flow-WM comparison is nearly complete; only A100/L40S `residual_flow` need final 10M checkpoints.
 - True-seed repeats are still early and should remain running before drawing a seed-level conclusion.
 
+## 2026-06-13 02:21 EDT status check
+
+Regenerated ablation tables/figures with:
+
+```bash
+/storage/project/r-agarg35-0/eliu354/envs/newt_official_20260602/bin/python scripts/generate_ablation_insights.py --out-dir docs/assets/ablation_insights_20260610
+```
+
+Latest highest-step eval snapshot:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Peak `avg_score` | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| A100 `mlp + flow` | 10.0M | 10.0M | 0.57810 | 0.60544 | complete; best subset20 final/peak so far |
+| H200 `mlp + flow` | 10.0M | 10.0M | 0.53852 | 0.58663 | complete |
+| H100 `mlp + gaussian` | 10.0M | 10.0M | 0.53816 | 0.59102 | complete |
+| A100 `mlp + gaussian` | 10.0M | 10.0M | 0.53570 | 0.56490 | complete |
+| L40S `mlp + flow` | 10.0M | 10.0M | 0.50825 | 0.55390 | complete |
+| H100 `mlp + flow` | 10.0M | 10.0M | 0.50044 | 0.58825 | complete |
+| H200 `mlp + gaussian` | 10.0M | 10.0M | 0.49223 | 0.53666 | complete |
+| L40S `mlp + gaussian` | 10.0M | 10.0M | 0.48801 | 0.55139 | complete |
+| H100 `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.48851 | 0.49207 | complete |
+| A100 `residual_flow + gaussian` | 7.88M | 7.8M | 0.46279 | 0.48669 | running as `9883636_2` |
+| H200 `residual_flow + gaussian` | 10.0M | 10.0M | 0.45510 | 0.49021 | complete |
+| H100 `residual_flow + gaussian` | 10.0M | 10.0M | 0.45304 | 0.51065 | complete |
+| L40S `residual_flow + gaussian` | 10.0M | 10.0M | 0.43283 | 0.46653 | complete |
+| L40S `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.39409 | 0.44734 | complete |
+| A100 `residual_mean_flow_wm + gaussian` | 10.0M | 10.0M | 0.37559 | 0.48471 | complete |
+
+True-seed repeat progress:
+
+| Run | Highest train step | Highest eval step | `avg_score` | Peak `avg_score` | Status |
+| --- | ---: | ---: | ---: | ---: | --- |
+| H200 seed2 `mlp + gaussian` | 6.10M | 6.0M | 0.48762 | 0.50749 | running as `9883635_0` |
+| H200 seed2 `mlp + flow` | 2.44M | 2.4M | 0.40574 | 0.42363 | running as `9883635_1` |
+| H200 seed3 `mlp + gaussian` | 1.82M | 1.8M | 0.39271 | 0.41236 | running as `9883637_0` |
+| H200 seed3 `mlp + flow` | 2.04M | 2.0M | 0.45539 | 0.46025 | running as `9883637_1` |
+
+Queue:
+
+- `9883636_2`: A100 `residual_flow + gaussian`, running.
+- `9883635_[0-1]`: H200 seed-2 repeats for `mlp + gaussian` and `mlp + flow`, running.
+- `9883637_[0-1]`: H200 seed-3 repeats for `mlp + gaussian` and `mlp + flow`, running.
+
+Current read:
+
+- L40S `residual_flow + gaussian` is now complete at 10M with final `0.43283`; this reinforces that residual-flow WM remains below MLP-WM.
+- A100 `residual_flow + gaussian` is the only remaining incomplete subset20 flow-WM cell.
+- Once A100 residual_flow reaches 10M, the subset20 flow-WM comparison is complete enough to freeze and focus on true-seed repeats / potential 20M scaling of the best MLP-WM cells.
+
 ## Success Criteria
 
 Primary metric:
