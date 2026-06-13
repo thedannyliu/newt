@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-11 22:48 EDT
+Last updated: 2026-06-12 20:17 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -66,12 +66,12 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | H200 | complete | 10.0M | 0.53852 | Reached 10M; peak observed eval was 0.58663 at 8.8M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | Gaussian | A100 | complete | 10.0M | 0.53570 | Completed 10M; peak observed eval was 0.56490 at 9.4M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | MLP | flow | A100 | complete | 10.0M | 0.57810 | Best subset20 final and peak MLP+flow run so far; peak observed eval was 0.60544 at 9.0M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | resubmitted | 8.4M | 0.38918 | Resubmitted as `9852202_[2]`; peak observed eval was 0.45885 at 6.8M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | L40S | resubmitted | 9.6M | 0.38556 | Preempted again and resubmitted as `9883638_[2]`; peak observed eval was 0.46063 at 8.8M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | A100 | complete | 10.0M | 0.37559 | Reached 10M; peak observed eval was 0.48471 at 7.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | complete | 10.0M | 0.39218 | Reached 10M; peak observed eval was 0.47535 at 9.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 10.0M | 0.48851 | Completed 10M despite Slurm preemption label; peak observed eval was 0.49207 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | complete | 10.0M | 0.45304 | Reached 10M; peak observed eval was 0.51065 at 6.0M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | resubmitted | 7.4M | 0.42752 | Preempted again and resubmitted as `9852195_[2]`; peak observed eval was 0.50374 at 7.0M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | resubmitted | 7.8M | 0.46279 | Preempted again and resubmitted as `9883636_[2]`; peak observed eval was 0.49115 at 7.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | complete | 10.0M | 0.39409 | Reached 10M; peak observed eval was 0.44734 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | complete | 10.0M | 0.45510 | Reached 10M; peak observed eval was 0.49021 at 9.6M. |
 
@@ -85,4 +85,4 @@ Current read:
 - The strongest completed original-style baseline remains `MLP + Gaussian`, with H100 0.53816 and A100 0.53570 at 10M; H200 reached 10M at 0.49223.
 - H100 `residual_flow + Gaussian` remains the strongest flow-WM signal by peak at 0.51065, but its 10M final is 0.45304 and it remains slower.
 - H200 `residual_flow + Gaussian` also finished at 10M with 0.45510 final, still below the MLP-WM baselines.
-- A100/L40S `residual_flow + Gaussian` were resubmitted as `9852195_[2]` and `9852202_[2]` to finish their remaining steps toward 10M.
+- A100/L40S `residual_flow + Gaussian` were resubmitted again as `9883636_[2]` and `9883638_[2]` to finish their remaining steps toward 10M.
