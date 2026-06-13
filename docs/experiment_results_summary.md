@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-13 02:21 EDT
+Last updated: 2026-06-13 18:37 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -71,7 +71,7 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | complete | 10.0M | 0.39218 | Reached 10M; peak observed eval was 0.47535 at 9.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 10.0M | 0.48851 | Completed 10M despite Slurm preemption label; peak observed eval was 0.49207 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | complete | 10.0M | 0.45304 | Reached 10M; peak observed eval was 0.51065 at 6.0M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 7.8M | 0.46279 | Active as `9883636_2`; peak observed eval was 0.48669 at 7.0M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 7.8M | 0.48379 | Interrupted by `embers` preemption as `9883636_2`; resumed as `9916316_2`. Peak observed eval was 0.48669 at 7.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | complete | 10.0M | 0.39409 | Reached 10M; peak observed eval was 0.44734 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | complete | 10.0M | 0.45510 | Reached 10M; peak observed eval was 0.49021 at 9.6M. |
 
@@ -83,6 +83,6 @@ Current read:
 - The subset20 high-step direction is much stronger overall, with most MLP-WM cells now complete at 10M; these are still not directly comparable to official 200-task results.
 - Current subset20 ranking still favors MLP WM. A100 `MLP + flow` reached the best final and peak so far: 0.57810 final at 10M and 0.60544 peak at 9.0M.
 - The strongest completed original-style baseline remains `MLP + Gaussian`, with H100 0.53816 and A100 0.53570 at 10M; H200 reached 10M at 0.49223.
-- H100 `residual_flow + Gaussian` remains the strongest flow-WM signal by peak at 0.51065, but its 10M final is 0.45304 and it remains slower.
+- H100 `residual_flow + Gaussian` remains the strongest completed flow-WM signal by peak at 0.51065, but its 10M final is 0.45304 and it remains slower.
 - H200 `residual_flow + Gaussian` also finished at 10M with 0.45510 final, still below the MLP-WM baselines.
-- L40S `residual_flow + Gaussian` finished at 10M with 0.43283 final; A100 `residual_flow + Gaussian` remains the only incomplete subset20 flow-WM cell and is running as `9883636_2`.
+- L40S `residual_flow + Gaussian` finished at 10M with 0.43283 final; A100 `residual_flow + Gaussian` remains the only incomplete subset20 flow-WM cell and is now running as `9916316_2` after preemption.

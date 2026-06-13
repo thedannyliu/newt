@@ -218,6 +218,7 @@ Latest subset20 eval snapshot:
 Early conclusion:
 
 - The reduced-task, higher-step direction matches the original hypothesis: the same pipeline gets much stronger learning signal than the 40-task/5M setting, reaching roughly 0.43-0.52 for MLP WM cells before 5M.
+
 - The architecture ranking has not flipped: MLP WM remains clearly stronger than flow WM variants.
 - `residual_mean_flow_wm` is the most promising flow-WM cell in this subset20 setting, but the gap to MLP WM is still large enough that it should be treated as a secondary candidate, not the main path.
 - `mlp + flow policy` remains competitive or best on subset20, but its value needs to be weighed against action-time overhead.
@@ -998,6 +999,54 @@ Current read:
 - L40S `residual_flow + gaussian` is now complete at 10M with final `0.43283`; this reinforces that residual-flow WM remains below MLP-WM.
 - A100 `residual_flow + gaussian` is the only remaining incomplete subset20 flow-WM cell.
 - Once A100 residual_flow reaches 10M, the subset20 flow-WM comparison is complete enough to freeze and focus on true-seed repeats / potential 20M scaling of the best MLP-WM cells.
+
+## 2026-06-13 18:37 EDT Monitoring and Repair
+
+Queue status:
+
+- No subset20 Newt job from the previous continuation remained active.
+- A100 residual_flow seed1 job `9883636_2` was interrupted by `embers` preemption.
+- H200 seed2 flow-policy job `9883635_1` was interrupted by `embers` preemption.
+- H200 seed3 Gaussian job `9883637_0` hit the 8-hour time limit.
+- H200 seed3 flow-policy job `9883637_1` was interrupted by `embers` preemption.
+- H200 seed2 Gaussian job `9883635_0` completed and reached the 10M target, so it was not resubmitted.
+
+Latest metric read before resubmission:
+
+| Run | Train step | Eval step | Latest avg_score | Peak avg_score | Slurm status | Action |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| A100 seed1 `residual_flow + Gaussian` | 7.88M | 7.80M | 0.48379 | 0.48669 at 7.0M | preempted | resubmitted as `9916316_2` |
+| H200 seed2 `MLP + Gaussian` | 10.00M | 10.00M | 0.49493 | 0.56419 at 9.6M | completed | no resubmission |
+| H200 seed2 `MLP + flow` | 5.40M | 5.20M | 0.55087 | 0.56606 at 4.8M | preempted | resubmitted as `9916317_1` |
+| H200 seed3 `MLP + Gaussian` | 7.00M | 6.80M | 0.54625 | 0.54625 at 6.8M | timeout | resubmitted as `9916318_0` |
+| H200 seed3 `MLP + flow` | 5.86M | 5.80M | 0.50606 | 0.55573 at 4.0M | preempted | resubmitted as `9916318_1` |
+
+Resubmission details:
+
+| Job | Partition | Array | Run tag | Seed | Purpose |
+| ---: | --- | --- | --- | ---: | --- |
+| `9916316` | `gpu-a100` | `2` | `a100-r1` | 1 | Finish the only incomplete seed1 residual_flow hardware replicate. |
+| `9916317` | `gpu-h200` | `1` | `h200-seed2` | 2 | Continue true-seed MLP+flow to 10M on the same hardware class. |
+| `9916318` | `gpu-h200` | `0-1` | `h200-seed3` | 3 | Continue true-seed MLP+Gaussian and MLP+flow to 10M on the same hardware class. |
+
+Current queue after repair:
+
+- `9916317_1`, `9916318_0`, and `9916318_1` started immediately on H200.
+- `9916316_2` started on A100 shortly after submission.
+
+Startup validation:
+
+- `9916316_2` resumed A100 seed1 `residual_flow + Gaussian` from `7_000_000_full.pt`.
+- `9916317_1` resumed H200 seed2 `MLP + flow` from `5_000_000_full.pt`.
+- `9916318_0` resumed H200 seed3 `MLP + Gaussian` from `7_000_000_full.pt`.
+- `9916318_1` resumed H200 seed3 `MLP + flow` from `5_000_000_full.pt`.
+- W&B resumed the same run IDs for all four continuations. The flow-policy continuations showed expected monotonic-step warnings because the latest full checkpoints are slightly behind the highest previously logged local metric step; W&B will resume logging new points once training passes the previous max step.
+
+Interpretation:
+
+- The incomplete runs are recoverable checkpoint continuations, not code or data failures.
+- The H200 true-seed repeats remain the most important active jobs because they test whether the MLP+flow policy signal survives real seed variation under fixed hardware.
+- A100 residual_flow is useful mainly to complete the seed1 hardware-replicate table; even if it improves slightly, current flow-WM evidence remains below MLP-WM baselines.
 
 ## Success Criteria
 
