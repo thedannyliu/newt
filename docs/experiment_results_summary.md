@@ -1,6 +1,6 @@
 # Experiment Results Summary
 
-Last updated: 2026-06-13 18:37 EDT
+Last updated: 2026-06-15 12:10 EDT
 
 Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated tasks. This is the same normalized-score definition used by the official Newt paper, but our local subset20/subset40 results are not directly comparable to the official 200-task protocol.
 
@@ -71,9 +71,13 @@ Metric: `avg_score`, the Newt/MMBench normalized score averaged over evaluated t
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H200 | complete | 10.0M | 0.39218 | Reached 10M; peak observed eval was 0.47535 at 9.0M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | H100 | complete | 10.0M | 0.48851 | Completed 10M despite Slurm preemption label; peak observed eval was 0.49207 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H100 | complete | 10.0M | 0.45304 | Reached 10M; peak observed eval was 0.51065 at 6.0M. |
-| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | running | 7.8M | 0.48379 | Interrupted by `embers` preemption as `9883636_2`; resumed as `9916316_2`. Peak observed eval was 0.48669 at 7.0M. |
+| Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | A100 | resubmitted | 9.2M | 0.49441 | Timed out as `9916316_2`; resubmitted as `9985900_2`. Peak observed eval is current best for this run at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_mean_flow_wm | Gaussian | L40S | complete | 10.0M | 0.39409 | Reached 10M; peak observed eval was 0.44734 at 9.2M. |
 | Subset20 10M high-step | 20 | 10M target + 50k demo | residual_flow | Gaussian | H200 | complete | 10.0M | 0.45510 | Reached 10M; peak observed eval was 0.49021 at 9.6M. |
+| Subset20 10M true-seed repeat | 20 | 10M target + 50k demo | MLP | Gaussian | H200 seed2 | complete | 10.0M | 0.49493 | True-seed repeat; peak observed eval was 0.56419 at 9.6M. |
+| Subset20 10M true-seed repeat | 20 | 10M target + 50k demo | MLP | Gaussian | H200 seed3 | complete | 10.0M | 0.54417 | True-seed repeat; peak observed eval was 0.57365 at 9.4M. |
+| Subset20 10M true-seed repeat | 20 | 10M target + 50k demo | MLP | flow | H200 seed2 | resubmitted | 6.8M | 0.54126 | Interrupted by `embers` preemption as `9916317_1`; resubmitted as `9985902_1`. Peak observed eval was 0.60778 at 6.6M. |
+| Subset20 10M true-seed repeat | 20 | 10M target + 50k demo | MLP | flow | H200 seed3 | resubmitted | 7.2M | 0.53940 | Interrupted by `embers` preemption as `9916318_1`; resubmitted as `9985903_1`. Peak observed eval was 0.55573 at 4.0M. |
 
 Current read:
 
@@ -83,6 +87,8 @@ Current read:
 - The subset20 high-step direction is much stronger overall, with most MLP-WM cells now complete at 10M; these are still not directly comparable to official 200-task results.
 - Current subset20 ranking still favors MLP WM. A100 `MLP + flow` reached the best final and peak so far: 0.57810 final at 10M and 0.60544 peak at 9.0M.
 - The strongest completed original-style baseline remains `MLP + Gaussian`, with H100 0.53816 and A100 0.53570 at 10M; H200 reached 10M at 0.49223.
+- H200 true-seed Gaussian repeats now bracket the original-style seed1 H200 result: seed2 final 0.49493 and seed3 final 0.54417.
+- H200 true-seed flow-policy repeats are incomplete but promising: seed2 peaked at 0.60778 by 6.6M, so these should be completed before making a final claim about flow policy robustness.
 - H100 `residual_flow + Gaussian` remains the strongest completed flow-WM signal by peak at 0.51065, but its 10M final is 0.45304 and it remains slower.
 - H200 `residual_flow + Gaussian` also finished at 10M with 0.45510 final, still below the MLP-WM baselines.
-- L40S `residual_flow + Gaussian` finished at 10M with 0.43283 final; A100 `residual_flow + Gaussian` remains the only incomplete subset20 flow-WM cell and is now running as `9916316_2` after preemption.
+- A100 `residual_flow + Gaussian` improved to 0.49441 at 9.2M and is the only incomplete subset20 flow-WM cell; it was resubmitted as `9985900_2` to finish the 10M target.

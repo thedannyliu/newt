@@ -7,7 +7,7 @@ Source metrics:
 - Local run logs: `outputs/logs/soup/1/*/metrics.jsonl`
 - Generated tables/figures: `docs/assets/ablation_insights_20260610/`
 - W&B project: https://wandb.ai/danny010324/newt-flow-2x2
-- Latest figure refresh: 2026-06-13 18:37 EDT. The subset20 high-step CSVs and figures were regenerated after the latest A100 residual_flow checkpoint read.
+- Latest figure refresh: 2026-06-15 12:10 EDT. The subset20 high-step CSVs and figures were regenerated after A100 residual_flow reached 9.2M and H200 seed3 Gaussian completed 10M.
 
 Important caveat: `mean +/- std` below is over completed local runs across GPU/replicate labels, not over independent random seeds unless explicitly stated.
 
@@ -21,7 +21,9 @@ Important caveat: `mean +/- std` below is over completed local runs across GPU/r
 | Our subset40 best completed 2x2 | 40 | 5M + 50k demo | MLP WM | Flow policy | 5M | 0.321 +/- 0.012 | 0.339 | Mean +/- std over 4 completed runs; best single run 0.339. Best completed 2x2 architecture. |
 | Our subset40 best flow-WM | 40 | 5M + 50k demo | Residual_flow WM | Gaussian | 5M | 0.232 +/- 0.027 | 0.256 | Mean +/- std over 4 completed runs; best single run 0.256. Best flow-WM variant, still below MLP WM. |
 | Our subset20 strongest signal | 20 | 10M target + 50k demo | MLP WM | Flow policy | 10.0M | 0.500-0.578 | 0.605 | All four hardware/replicate labels reached 10M; A100 is best with 0.578 final and 0.605 peak. |
-| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 7.8M-10.0M current | 0.433-0.484 | 0.511 | H100 residual_flow peak is still the strongest completed flow-WM signal; completed 10M finals are 0.433-0.455 and remain below MLP-WM. A100 is incomplete at 7.8M and is running again. |
+| Our subset20 promising flow-WM | 20 | 10M target + 50k demo | Residual_flow WM | Gaussian | 9.2M-10.0M current | 0.433-0.494 | 0.511 | H100 residual_flow peak is still the strongest completed flow-WM signal; completed 10M finals are 0.433-0.455 and remain below MLP-WM. A100 is incomplete at 9.2M and was resubmitted to finish. |
+
+True-seed H200 repeats are now partially available. Gaussian seed2/seed3 reached 10M with final scores 0.49493 / 0.54417. Flow-policy seed2/seed3 remain incomplete at 6.8M / 7.2M, but seed2 already peaked at 0.60778, so finishing these runs is the main robustness check for the flow-policy signal.
 
 ## Architecture Ablation
 

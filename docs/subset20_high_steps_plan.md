@@ -1048,6 +1048,44 @@ Interpretation:
 - The H200 true-seed repeats remain the most important active jobs because they test whether the MLP+flow policy signal survives real seed variation under fixed hardware.
 - A100 residual_flow is useful mainly to complete the seed1 hardware-replicate table; even if it improves slightly, current flow-WM evidence remains below MLP-WM baselines.
 
+## 2026-06-15 12:10 EDT Monitoring and Repair
+
+Queue status before repair:
+
+- No subset20 Newt job from the previous continuation remained active.
+- A100 seed1 `residual_flow + Gaussian` job `9916316_2` hit the 8-hour `embers` time limit.
+- H200 seed2 `MLP + flow` job `9916317_1` was interrupted by `embers` preemption.
+- H200 seed3 `MLP + Gaussian` job `9916318_0` completed and reached the 10M target.
+- H200 seed3 `MLP + flow` job `9916318_1` was interrupted by `embers` preemption.
+
+Latest metric read before resubmission:
+
+| Run | Train step | Eval step | Latest avg_score | Peak avg_score | Slurm status | Action |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| A100 seed1 `residual_flow + Gaussian` | 9.26M | 9.20M | 0.49441 | 0.49441 at 9.2M | timeout | resubmitted as `9985900_2` |
+| H200 seed2 `MLP + Gaussian` | 10.00M | 10.00M | 0.49493 | 0.56419 at 9.6M | completed earlier | no resubmission |
+| H200 seed2 `MLP + flow` | 6.86M | 6.80M | 0.54126 | 0.60778 at 6.6M | preempted | resubmitted as `9985902_1` |
+| H200 seed3 `MLP + Gaussian` | 10.00M | 10.00M | 0.54417 | 0.57365 at 9.4M | completed | no resubmission |
+| H200 seed3 `MLP + flow` | 7.32M | 7.20M | 0.53940 | 0.55573 at 4.0M | preempted | resubmitted as `9985903_1` |
+
+Resubmission details:
+
+| Job | Partition | Array | Run tag | Seed | Purpose |
+| ---: | --- | --- | --- | ---: | --- |
+| `9985900` | `gpu-a100` | `2` | `a100-r1` | 1 | Finish the final incomplete seed1 residual_flow hardware replicate. |
+| `9985902` | `gpu-h200` | `1` | `h200-seed2` | 2 | Continue true-seed MLP+flow to 10M on the same hardware class. |
+| `9985903` | `gpu-h200` | `1` | `h200-seed3` | 3 | Continue true-seed MLP+flow to 10M on the same hardware class. |
+
+Current queue after repair:
+
+- `9985900_2`, `9985902_1`, and `9985903_1` are pending with reason `Priority`.
+
+Current read:
+
+- A100 residual_flow improved from 0.48379 at 7.8M to 0.49441 at 9.2M, but it is still below the strongest MLP-WM cells and needs a final 10M point.
+- The first completed true-seed H200 pair is now partially available: seed2 Gaussian final is 0.49493, seed3 Gaussian final is 0.54417.
+- The true-seed flow-policy cells remain incomplete, but seed2 has already shown the strongest local peak so far at 0.60778. This makes finishing seed2/seed3 flow important before deciding whether the flow-policy gain is robust or just a transient peak.
+
 ## Success Criteria
 
 Primary metric:
